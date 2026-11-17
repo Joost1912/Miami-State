@@ -12,10 +12,10 @@ Factions.Civilian = {
 	Whitelisted = false, -- frei waehlbar am Jobcenter
 	DutyRequired = false,
 	Ranks = {
-		{ Id = "Citizen", Name = "Zivilist", Salary = 50 },
-		{ Id = "Employee", Name = "Angestellter", Salary = 100 },
-		{ Id = "SelfEmployed", Name = "Selbststaendiger", Salary = 100 },
-		{ Id = "Entrepreneur", Name = "Unternehmer", Salary = 100 },
+		{ Id = "Citizen", Name = "Zivilist", Salary = 50 }, -- Prompt 11: Grundsicherung; Verdienst ueber Berufe (Config.Work)
+		{ Id = "Employee", Name = "Angestellter", Salary = 50 },
+		{ Id = "SelfEmployed", Name = "Selbststaendiger", Salary = 50 },
+		{ Id = "Entrepreneur", Name = "Unternehmer", Salary = 50 },
 	},
 	Permissions = { "Vehicle.Civilian" },
 	RankPermissions = {},

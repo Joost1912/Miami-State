@@ -413,6 +413,9 @@ local function acquire(player, p, mode)
 		})
 	end)
 	S.Log("Property", player, nil, string.format("%s %s %s ($%d)", mode == "Own" and "Kauf" or "Miete", b.Name, tostring(number), cost))
+	if S.BusinessService then
+		S.BusinessService.OnProperty(cost) -- Prompt 11: Provision Immobilienunternehmen
+	end
 	return true, mode == "Own" and string.format("Wohnung %s gekauft - willkommen zu Hause!", number) or string.format("Mietvertrag fuer %s unterschrieben (%d Tage, %s)", number, Cfg.RentDays, S.Format.money(cost))
 end
 

@@ -74,6 +74,8 @@ local function defaults()
 		--   Vehicles.Owned[i] += { Price, Paint, Fuel, Tuning = { Rims, Tint, Underglow, Lights } }
 		--   Properties.Owned[i] = { Id, Building, Tier, Number, Mode = "Own"|"Rent", Price, RentUntil, Locked, Keys, Furniture, Storage }
 		Leisure = { Fitness = 0, Bowling = 0, Arcade = 0, Hoops = 0 },
+		-- Prompt 11: Beruf, Karriere (XP), Statistik je Beruf { Tasks, Earned }, Gesamtverdienst aus Arbeit
+		Work = { Job = "", XP = 0, Stats = {}, Earned = 0 },
 		Meta = { FirstJoin = os.time(), LastJoin = 0, LastSave = 0, RecentTx = {}, Session = nil },
 	}
 end

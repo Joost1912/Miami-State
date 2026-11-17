@@ -493,10 +493,18 @@ table.insert(Apps, { Id = "RescueApp", Name = "Fire / EMS", Icon = "🚑", Color
 		comingSoon("Fire / EMS", "Informationen zu Feuerwehr und Rettungsdienst folgen. Im Notfall: Notruf-App.")()
 	end
 end })
-table.insert(Apps, { Id = "Jobs", Name = "Jobs", Icon = "💼", Color = Color3.fromRGB(200, 150, 90), Open = function()
-	Phone.Close()
-	ctxRef.Open("Jobs")
-end })
+-- Prompt 11: JOBS, KARRIERE, UNTERNEHMEN, MITARBEITER, FINANZEN oeffnen das Arbeits-Dashboard im passenden Reiter
+-- (Fraktionen & Rollen weiterhin ueber Taste J bzw. den Knopf im Dashboard)
+local function workApp(tab)
+	return function()
+		Phone.Close()
+		ctxRef.Open("Work", { Tab = tab })
+	end
+end
+table.insert(Apps, { Id = "Jobs", Name = "Jobs", Icon = "💼", Color = Color3.fromRGB(200, 150, 90), Open = workApp("Jobs") })
+table.insert(Apps, { Id = "Career", Name = "Karriere", Icon = "📈", Color = Color3.fromRGB(64, 200, 170), Open = workApp("Career") })
+table.insert(Apps, { Id = "Employees", Name = "Mitarbeiter", Icon = "👔", Color = Color3.fromRGB(90, 130, 230), Open = workApp("Employees") })
+table.insert(Apps, { Id = "Finances", Name = "Finanzen", Icon = "📊", Color = Color3.fromRGB(40, 170, 110), Open = workApp("Finances") })
 -- Prompt 10: Immobilien (eigene Wohnungen verwalten) und Garage/Autohandel oeffnen die grossen Menues
 table.insert(Apps, { Id = "Estate", Name = "Immobilien", Icon = "🏠", Color = Color3.fromRGB(90, 170, 90), Open = function()
 	Phone.Close()
@@ -507,13 +515,14 @@ table.insert(Apps, { Id = "CarTrade", Name = "Garage", Icon = "🏎", Color = Co
 	ctxRef.Open("Vehicles", { Tab = "Garage" })
 end })
 table.insert(Apps, { Id = "Messages", Name = "Nachrichten", Icon = "💬", Color = Color3.fromRGB(80, 210, 110), Open = comingSoon("Nachrichten", "Private Nachrichten an deine Kontakte.") })
-table.insert(Apps, { Id = "Business", Name = "Firmen", Icon = "🏢", Color = Color3.fromRGB(150, 110, 220), Open = comingSoon("Unternehmen", "Eigene Firmen gruenden und verwalten.") })
+table.insert(Apps, { Id = "Business", Name = "Firmen", Icon = "🏢", Color = Color3.fromRGB(150, 110, 220), Open = workApp("Business") })
 
 -- Startbildschirm ---------------------------------------------------------------------------------------
 function Phone.Home()
 	local UI = ctxRef.UI
 	local p = clearPage()
-	local grid = UI.new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(18, 70), Size = UDim2.new(1, -30, 1, -80), Parent = p })
+	-- Prompt 11: scrollbar, damit weitere Apps Platz haben
+	local grid = UI.scroll(p, { Position = UDim2.fromOffset(18, 70), Size = UDim2.new(1, -30, 1, -80), ScrollBarThickness = 2 })
 	UI.new("UIGridLayout", { CellSize = UDim2.fromOffset(58, 80), CellPadding = UDim2.fromOffset(8, 6), Parent = grid })
 	UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 6), Size = UDim2.new(1, 0, 0, 48), Font = T().FontBlack, TextSize = 46, TextColor3 = Color3.new(1, 1, 1), TextTransparency = 0.05, Text = gameClock(), Parent = p })
 	for _, app in ipairs(Apps) do

@@ -31,6 +31,7 @@ local ctx = {
 		-- Prompt 10
 		Vehicles = require(Shared.Config.Vehicles),
 		Properties = require(Shared.Config.Properties),
+		Work = require(Shared.Config.Work), -- Prompt 11
 		-- generierte Kartendaten (Schritt 22_MapExport); fehlen sie, laufen Karte/Minimap nicht
 		MapGeo = Shared.Config:FindFirstChild("MapGeo") and require(Shared.Config.MapGeo) or nil,
 	},
@@ -190,6 +191,15 @@ Push.OnClientEvent:Connect(function(kind, data)
 		controllers.Property.Ring(ctx, data)
 	elseif kind == "Activity" then
 		controllers.Activity.Push(ctx, data)
+	-- Prompt 11: Berufe, Unternehmen, Rechnungen
+	elseif kind == "OpenWork" then
+		ctx.Open("Work", data)
+	elseif kind == "WorkTask" then
+		controllers.Work.Task(ctx, data)
+	elseif kind == "WorkDone" then
+		controllers.Work.Done(ctx, data)
+	elseif kind == "Invoice" then
+		controllers.Work.Invoice(ctx, data)
 	end
 end)
 
@@ -237,6 +247,7 @@ task.spawn(controllers.FireTools.Start, ctx)
 controllers.WeaponHud.Start(ctx)
 task.spawn(controllers.Crime.Start, ctx)
 controllers.Activity.Start(ctx)
+controllers.Work.Start(ctx)
 
 -- Profil anfordern (falls der erste Push vor dem Laden dieses Skripts kam)
 task.spawn(function()

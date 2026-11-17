@@ -28,11 +28,42 @@ function PayrollService.SalaryFor(data)
 	return r.Salary
 end
 
+-- Prompt 11: Anti-AFK - Gehalt/Grundsicherung nur bei Aktivitaet im Auszahlungszeitraum
+-- (Bewegung von mind. ActiveMoveStuds oder ein abgeschlossener Arbeitsauftrag)
+local WorkCfg = require(Shared.Config.Work)
+local moved = {} -- [player] = zurueckgelegte Studs seit der letzten Auszahlung
+local lastPos = {}
+task.spawn(function()
+	while true do
+		task.wait(15)
+		for _, player in ipairs(Players:GetPlayers()) do
+			local r = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+			if r then
+				if lastPos[player] then
+					moved[player] = (moved[player] or 0) + math.min(200, (r.Position - lastPos[player]).Magnitude)
+				end
+				lastPos[player] = r.Position
+			end
+		end
+	end
+end)
+Players.PlayerRemoving:Connect(function(p)
+	moved[p], lastPos[p] = nil, nil
+end)
+function PayrollService.IsActive(player)
+	return (moved[player] or 0) >= WorkCfg.ActiveMoveStuds
+end
+
 function PayrollService.PayOnce()
 	local paid = 0
 	for _, player in ipairs(Players:GetPlayers()) do
 		local d = DataService.Get(player)
-		if d and d.Character.Created then
+		local active = PayrollService.IsActive(player) or typeof(player) ~= "Instance"
+		moved[player] = 0
+		if d and d.Character.Created and not active then
+			push(player, "Notify", { Text = "Kein Gehalt: in den letzten 10 Minuten keine Aktivitaet (AFK)", Kind = "warning" })
+		end
+		if d and d.Character.Created and active then
 			local amount = PayrollService.SalaryFor(d)
 			if amount > 0 then
 				local f = Factions[d.Job.Faction]

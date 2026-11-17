@@ -132,7 +132,7 @@ InteractionService.Register("Shop", function(player, inst)
 	local cat = id and Shops.Catalogs[id]
 	if cat then
 		-- Katalog mit serverseitig berechneten Sperrgruenden (Waffenschein, Spielzeit, ...)
-		local data = Services and Services.ShopService and Services.ShopService.Describe(player, id)
+		local data = Services and Services.ShopService and Services.ShopService.Describe(player, id, inst)
 		push(player, "OpenShop", data or { ShopId = id, Title = cat.Title, Kind = cat.Kind, Items = cat.Items })
 	end
 end)

@@ -43,7 +43,7 @@ return function(Kit)
 	-- Shared
 	local shared = folder(RS, "MiamiShared")
 	local cfg = folder(shared, "Config")
-	for _, m in ipairs({ "Economy", "Factions", "Items", "Shops", "Police", "MapData", "Rescue", "Clothing", "Crime", "MapExtra", "Vehicles", "Properties" }) do -- Prompt 08-10 ergaenzt
+	for _, m in ipairs({ "Economy", "Factions", "Items", "Shops", "Police", "MapData", "Rescue", "Clothing", "Crime", "MapExtra", "Vehicles", "Properties", "Work" }) do -- Prompt 08-10 ergaenzt
 		install(cfg, m, "ModuleScript", "Shared/Config/" .. m .. ".luau")
 		n += 1
 	end
@@ -53,7 +53,7 @@ return function(Kit)
 	-- Server
 	local server = folder(SSS, "MiamiServer")
 	local services = folder(server, "Services")
-	for _, m in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "PoliceService", "RadioService", "DispatchService", "JusticeService", "UniformService", "RescueService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService" }) do -- Prompt 08-10 ergaenzt
+	for _, m in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "PoliceService", "RadioService", "DispatchService", "JusticeService", "UniformService", "RescueService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService" }) do -- Prompt 08-11 ergaenzt
 		install(services, m, "ModuleScript", "Server/Services/" .. m .. ".luau")
 		n += 1
 	end
@@ -66,7 +66,7 @@ return function(Kit)
 	-- Client
 	local main = install(SPS, "MainClient", "LocalScript", "Client/MainClient.client.luau")
 	local ctrl = folder(main, "Controllers")
-	for _, m in ipairs({ "Hud", "CharacterCreator", "Profile", "Bank", "Inventory", "Jobs", "Shop", "Interact", "Police", "Radio", "MDT", "Emergency", "Overlays", "Rescue", "Phone", "CityMap", "Minimap", "Medical", "FireTools", "WeaponHud", "Crime", "Vehicles", "Property", "Activity" }) do -- Prompt 08-10 ergaenzt
+	for _, m in ipairs({ "Hud", "CharacterCreator", "Profile", "Bank", "Inventory", "Jobs", "Shop", "Interact", "Police", "Radio", "MDT", "Emergency", "Overlays", "Rescue", "Phone", "CityMap", "Minimap", "Medical", "FireTools", "WeaponHud", "Crime", "Vehicles", "Property", "Activity", "Work" }) do -- Prompt 08-10 ergaenzt
 		install(ctrl, m, "ModuleScript", "Client/Controllers/" .. m .. ".luau")
 		n += 1
 	end

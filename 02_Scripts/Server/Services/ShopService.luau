@@ -93,14 +93,16 @@ function ShopService.LockReason(player, cat, entry)
 end
 
 -- Katalog fuer die Anzeige (mit Sperrgruenden je Artikel)
-function ShopService.Describe(player, shopId)
+function ShopService.Describe(player, shopId, inst)
+	-- Prompt 11: Preisfaktor des Unternehmensinhabers (nur Kassen mit BusinessId)
+	local factor = (S and S.BusinessService and inst) and S.BusinessService.PriceFactor(inst) or 1
 	local cat = Shops.Catalogs[shopId]
 	if not cat then
 		return nil
 	end
 	local items = {}
 	for _, e in ipairs(cat.Items) do
-		table.insert(items, { Id = e.Id, Price = e.Price, Pack = e.Pack or 1, Locked = ShopService.LockReason(player, cat, e) })
+		table.insert(items, { Id = e.Id, Price = math.floor(e.Price * factor + 0.5), Pack = e.Pack or 1, Locked = ShopService.LockReason(player, cat, e) })
 	end
 	return {
 		ShopId = shopId, Title = cat.Title, Subtitle = cat.Subtitle, Kind = cat.Kind or "Retail", Icon = cat.Icon,
@@ -168,7 +170,9 @@ function ShopService.Buy(player, p)
 	if p.TxId ~= nil and not EconomyService.ClaimTx(player, p.TxId) then
 		return false, "Kauf bereits verarbeitet"
 	end
-	local total = entry.Price * count
+	local shopInst = InteractionService.NearestOfType(player, "Shop", EconomyConfig.ShopRange)
+	local factor = (S and S.BusinessService) and S.BusinessService.PriceFactor(shopInst) or 1
+	local total = math.floor(entry.Price * factor + 0.5) * count
 	local ok, err = EconomyService.Charge(player, p.Method, total, cat.Title .. ": " .. (units > 1 and (units .. "x ") or "") .. def.Name)
 	if not ok then
 		return false, err
@@ -189,6 +193,9 @@ function ShopService.Buy(player, p)
 	end
 	if S and S.Log and (def.Weapon or p.ItemId == "WeaponLicense" or cat.Kind == "Weapons") then
 		S.Log("WeaponShop", player, nil, string.format("%s: %dx %s ($%d, %s)", cat.Title, units, def.Name, total, p.Method))
+	end
+	if S and S.BusinessService then
+		S.BusinessService.OnSale(shopInst, total, cat.Title)
 	end
 	return true, string.format("%s%s gekauft ($%d)", units > 1 and (units .. "x ") or "", def.Name, total)
 end

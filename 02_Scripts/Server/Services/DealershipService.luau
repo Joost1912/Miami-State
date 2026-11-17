@@ -121,6 +121,9 @@ function D.Buy(player, p)
 		})
 	end)
 	S.Log("Vehicle", player, nil, string.format("Kauf %s (%s) fuer $%d", m.Name, plate, m.Price))
+	if S.BusinessService then
+		S.BusinessService.OnDealer(m.Dealer, m.Price) -- Prompt 11: Provision des Autohaus-Inhabers
+	end
 	return true, string.format("Glueckwunsch! %s gekauft - Kennzeichen %s. Abholung ueber Garage oder Handy.", m.Name, plate), { Plate = plate }
 end
 
@@ -317,6 +320,11 @@ function D.Tune(player, p)
 		local ok, err = S.EconomyService.Charge(player, "Bank", price, "Tuning " .. entry.Plate)
 		if not ok then
 			return false, err
+		end
+		-- Prompt 11: Umsatzanteil fuer die Werkstatt/das Autohaus (Interaktionspunkt mit BusinessId)
+		local shop = nearType(player, "Tuning", 40) or nearDealer(player)
+		if S.BusinessService and shop then
+			S.BusinessService.OnSale(shop, price, "Tuning")
 		end
 	end
 	S.DataService.Mutate(player, "VehicleTune", function(data)

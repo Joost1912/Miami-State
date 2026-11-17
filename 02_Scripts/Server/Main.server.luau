@@ -50,7 +50,7 @@ end
 -- Services laden
 local S = { Push = push, Log = log, Format = require(Shared.Format), Remotes = { Request = Request, Push = PushRemote, VehicleControl = VehicleControl, FireSpray = FireSpray } }
 -- Prompt 10: DealershipService (Autohaus/Garage/Tuning), PropertyService (Apartments), ActivityService (Downtown)
-for _, name in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService" }) do
+for _, name in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService" }) do
 	S[name] = require(ServicesFolder:WaitForChild(name))
 end
 S.DataService.SetPushRemote(PushRemote)
@@ -623,7 +623,7 @@ end
 
 -- Start
 S.DataService.Start()
-for _, name in ipairs({ "JobService", "PayrollService", "CharacterService", "InteractionService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService" }) do
+for _, name in ipairs({ "JobService", "PayrollService", "CharacterService", "InteractionService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService" }) do
 	S[name].Start()
 end
 -- Interaktionspunkte der Polizeiwache
@@ -871,6 +871,22 @@ if game:GetService("RunService"):IsStudio() then
 		local target = (who == "suspect") and suspect or Players:GetPlayers()[1]
 		local d = S.DataService.Get(target)
 		return game:GetService("HttpService"):JSONEncode({ Injury = target:GetAttribute("Injury"), Stabilized = target:GetAttribute("Stabilized"), Health = target.Character and target.Character.Humanoid.Health, Saved = d and d.Medical, WalkSpeed = target.Character and target.Character.Humanoid.WalkSpeed })
+	end
+	-- Prompt 11: Berufe/Unternehmen testen
+	function C.WorkState()
+		return S.WorkService.Debug(Players:GetPlayers()[1])
+	end
+	function C.SetXP(xp)
+		local p = Players:GetPlayers()[1]
+		S.DataService.Mutate(p, "DebugXP", function(d)
+			d.Work.XP = xp
+		end)
+		p:SetAttribute("WorkLevel", require(Shared.Config.Work).LevelFor(xp))
+		return "XP " .. xp
+	end
+	function C.BusinessFlush()
+		S.BusinessService.Flush()
+		return "ok"
 	end
 	function C.Audit(n)
 		local out = {}

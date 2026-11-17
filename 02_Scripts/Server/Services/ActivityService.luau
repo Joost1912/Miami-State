@@ -81,6 +81,19 @@ local function useDoor(player, door)
 		S.Push(player, "Notify", { Text = "Geschlossen", Kind = "error" })
 		return
 	end
+	-- Prompt 11: Eintritt (vom Club-Inhaber festgelegt) beim Betreten von aussen; VIP-Armband = frei
+	local fee = (door:GetAttribute("Side") == "Out" and S.BusinessService) and S.BusinessService.EntryFee(door) or 0
+	if fee > 0 and S.InventoryService.Count(player, "VIPPass") < 1 then
+		local d = S.DataService.Get(player)
+		local acc = d.Money.Cash >= fee and "Cash" or "Bank"
+		local okPay, errPay = S.EconomyService.Charge(player, acc, fee, "Eintritt " .. tostring(door:GetAttribute("ObjectText")))
+		if not okPay then
+			S.Push(player, "Notify", { Text = "Eintritt " .. S.Format.money(fee) .. ": " .. tostring(errPay), Kind = "error" })
+			return
+		end
+		S.BusinessService.OnSale(door, fee, "Eintritt", true)
+		S.Push(player, "Notify", { Text = "Eintritt bezahlt: " .. S.Format.money(fee), Kind = "info" })
+	end
 	local req = door:GetAttribute("Requires")
 	if req and req ~= "" then
 		if S.InventoryService.Count(player, req) < 1 then
