@@ -1,0 +1,1 @@
+-- MIAMI STATE: ersetzt die automatische Regeneration (Heilung ueber MedicalService)

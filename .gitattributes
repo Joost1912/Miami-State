@@ -1,0 +1,3 @@
+# Skripte immer mit LF (identisch zu Roblox Studio), auch bei core.autocrlf=true
+*.luau text eol=lf
+*.md text eol=lf
