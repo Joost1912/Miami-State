@@ -76,6 +76,13 @@ local function gameClock()
 	return string.format("%02d:%02d", math.floor(m / 60) % 24, math.floor(m % 60))
 end
 
+local WEEKDAYS = { "MONTAG", "DIENSTAG", "MITTWOCH", "DONNERSTAG", "FREITAG", "SAMSTAG", "SONNTAG" }
+local function gameDay()
+	local t = Lighting.ClockTime
+	local d = Lighting:GetAttribute("GameDay") or 4
+	return WEEKDAYS[(d % 7) + 1] .. "  ·  " .. ((t >= 6 and t < 18.6) and "TAG" or "NACHT")
+end
+
 -- Apps ----------------------------------------------------------------------------------------------------
 local Apps = {}
 -- Prompt 12: Bausteine fuer ausgelagerte Apps (PhoneComms: Nachrichten, Telefon)
@@ -527,7 +534,9 @@ function Phone.Home()
 	-- Prompt 11: scrollbar, damit weitere Apps Platz haben
 	local grid = UI.scroll(p, { Position = UDim2.fromOffset(18, 70), Size = UDim2.new(1, -30, 1, -80), ScrollBarThickness = 2 })
 	UI.new("UIGridLayout", { CellSize = UDim2.fromOffset(58, 80), CellPadding = UDim2.fromOffset(8, 6), Parent = grid })
-	UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 6), Size = UDim2.new(1, 0, 0, 48), Font = T().FontBlack, TextSize = 46, TextColor3 = Color3.new(1, 1, 1), TextTransparency = 0.05, Text = gameClock(), Parent = p })
+	UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 2), Size = UDim2.new(1, 0, 0, 46), Font = T().FontBlack, TextSize = 46, TextColor3 = Color3.new(1, 1, 1), TextTransparency = 0.05, Text = gameClock(), Parent = p })
+	-- Prompt 14: Wochentag + Tag/Nacht (frueher oben links im HUD)
+	UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 48), Size = UDim2.new(1, 0, 0, 16), Font = T().FontBold, TextSize = 12, TextColor3 = Color3.fromRGB(230, 234, 245), TextStrokeTransparency = 0.7, Text = gameDay(), Parent = p })
 	for _, app in ipairs(Apps) do
 		local cell = UI.new("Frame", { BackgroundTransparency = 1, Parent = grid })
 		local icon = UI.new("TextButton", { AutoButtonColor = true, AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.fromOffset(54, 54), BackgroundColor3 = app.Color, Text = app.Icon, TextSize = 28, Font = T().FontBold, TextColor3 = Color3.new(1, 1, 1), Parent = cell })

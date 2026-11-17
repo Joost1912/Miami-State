@@ -1,10 +1,10 @@
 -- Premium-HUD (Prompt 10, ersetzt das bisherige HUD in derselben ScreenGui "MiamiHUD"):
---   oben links  : Spieluhr (synchron mit Lighting.ClockTime) + Wochentag
---   oben rechts : MIAMI STATE Schriftzug, darunter CASH / BANK (live ueber Spieler-Attribute) + Beruf
+--   (Spieluhr: seit Prompt 14 nur im Handy)
+--   oben rechts : (bis in die Ecke) MIAMI STATE Schriftzug, darunter CASH / BANK (live ueber Spieler-Attribute) + Beruf
 --   unten links : Minimap (Controller Minimap) + Lebensanzeige/Status direkt darunter (hier)
 --   unten rechts: Fahrzeuganzeige (nur im Fahrzeug): Tempo, Tank, Gurt, Licht, Kennzeichen
 --   rechts      : schmale Schnellzugriffsleiste (Maus/Touch), Tastenkuerzel bleiben unveraendert
--- Leistung: Uhr 2x/s, Fahrzeuganzeige 15 Hz und nur im Fahrzeug, alles andere ereignisgesteuert.
+-- Leistung: Fahrzeuganzeige 15 Hz und nur im Fahrzeug, alles andere ereignisgesteuert.
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -14,7 +14,6 @@ local UserInputService = game:GetService("UserInputService")
 local CollectionService = game:GetService("CollectionService")
 
 local Hud = {}
-local WEEKDAYS = { "MONTAG", "DIENSTAG", "MITTWOCH", "DONNERSTAG", "FREITAG", "SAMSTAG", "SONNTAG" }
 local STUDS_TO_KMH = 0.28 * 3.6
 
 Hud.Seatbelt = false
@@ -29,7 +28,6 @@ function Hud.Start(ctx)
 	local player = Players.LocalPlayer
 	local scr = UI.screen("MiamiHUD", 5)
 	local inset = GuiService:GetGuiInset()
-	local TOP = math.max(inset.Y, 36) + 10
 	local GLASS = Color3.fromRGB(8, 10, 16)
 	local GREEN = Color3.fromRGB(114, 204, 114)
 
@@ -46,28 +44,10 @@ function Hud.Start(ctx)
 		return l
 	end
 
-	-- OBEN LINKS: Uhr ----------------------------------------------------------------------------
-	local clockBox = UI.new("Frame", { Name = "Clock", Position = UDim2.fromOffset(16, TOP), Size = UDim2.fromOffset(150, 52), BackgroundTransparency = 1, Parent = scr })
-	local clock = shadow(txt(clockBox, { Size = UDim2.new(1, 0, 0, 34), FontFace = font(Enum.FontWeight.Bold), TextSize = 32, TextXAlignment = Enum.TextXAlignment.Left, Text = "00:00" }))
-	local day = shadow(txt(clockBox, { Position = UDim2.fromOffset(2, 34), Size = UDim2.new(1, 0, 0, 14), FontFace = font(Enum.FontWeight.SemiBold), TextSize = 11, TextColor3 = Color3.fromRGB(200, 206, 220), TextXAlignment = Enum.TextXAlignment.Left, Text = "" }))
-	local accentBar = UI.new("Frame", { BorderSizePixel = 0, Position = UDim2.fromOffset(-8, 6), Size = UDim2.fromOffset(3, 38), BackgroundColor3 = T.Accent, Parent = clockBox })
-	UI.new("UIGradient", { Color = ColorSequence.new(T.Accent, T.Accent2), Rotation = 90, Parent = accentBar })
-	UI.corner(accentBar, 2)
-	local lastMin = -1
-	local function updateClock()
-		local t = Lighting.ClockTime
-		local h, m = math.floor(t), math.floor((t % 1) * 60)
-		local key = h * 60 + m
-		if key ~= lastMin then
-			lastMin = key
-			clock.Text = string.format("%02d:%02d", h, m)
-		end
-		local d = Lighting:GetAttribute("GameDay") or 4
-		day.Text = WEEKDAYS[(d % 7) + 1] .. "  ·  " .. ((t >= 6 and t < 18.6) and "TAG" or "NACHT")
-	end
+	-- Uhr: seit Prompt 14 nur noch im Handy (Statusleiste + Startbildschirm mit Wochentag)
 
 	-- OBEN RECHTS: Logo + Geld ----------------------------------------------------------------------
-	local brand = UI.new("Frame", { Name = "Brand", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -18, 0, TOP - 2), Size = UDim2.fromOffset(250, 120), BackgroundTransparency = 1, Parent = scr })
+	local brand = UI.new("Frame", { Name = "Brand", AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 4), Size = UDim2.fromOffset(250, 120), BackgroundTransparency = 1, Parent = scr })
 	local logo = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 30), Parent = brand })
 	local logoList = UI.list(logo, 6, true)
 	logoList.HorizontalAlignment = Enum.HorizontalAlignment.Right
@@ -288,7 +268,7 @@ function Hud.Start(ctx)
 	-- Sichtbarkeit (Charakter erstellt) und Beruf ----------------------------------------------------
 	local function refresh()
 		local created = player:GetAttribute("CharacterCreated") == true
-		brand.Visible, clockBox.Visible, status.Visible, dock.Visible = created, created, created, created
+		brand.Visible, status.Visible, dock.Visible = created, created, created
 		animateMoney(cashLbl, cashDelta, "Cash", player:GetAttribute("Cash") or 0)
 		animateMoney(bankLbl, bankDelta, "Bank", player:GetAttribute("Bank") or 0)
 		local fac = player:GetAttribute("Faction") or "Civilian"
@@ -310,13 +290,12 @@ function Hud.Start(ctx)
 	end
 	refresh()
 
-	-- Takt: Uhr, Fahrzeugdaten, Ausblenden bei grossen Menues (Handy/Karte) ---------------------------
+	-- Takt: Fahrzeugdaten, Ausblenden bei grossen Menues (Handy/Karte) ---------------------------
 	local accClock, accVeh, lastOpen = 1, 0, nil
 	RunService.RenderStepped:Connect(function(dt)
 		accClock += dt
 		if accClock >= 0.5 then
 			accClock = 0
-			updateClock()
 			-- Handy und Stadtkarte haben Vorrang: HUD unten links dezent ausblenden
 			local open = ctx.OpenMenu
 			if open ~= lastOpen then
@@ -365,7 +344,6 @@ function Hud.Start(ctx)
 		hazIcon.TextTransparency = m:GetAttribute("Hazard") and ((os.clock() % 0.8) < 0.4 and 0 or 0.4) or 0.7
 		sirenIcon.TextTransparency = (m:GetAttribute("LightsOn") or m:GetAttribute("Siren")) and 0 or 0.7
 	end)
-	updateClock()
 end
 
 return Hud
