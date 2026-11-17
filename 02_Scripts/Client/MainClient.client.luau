@@ -28,6 +28,9 @@ local ctx = {
 		Rescue = require(Shared.Config.Rescue),
 		Clothing = require(Shared.Config.Clothing),
 		Crime = require(Shared.Config.Crime),
+		-- Prompt 10
+		Vehicles = require(Shared.Config.Vehicles),
+		Properties = require(Shared.Config.Properties),
 		-- generierte Kartendaten (Schritt 22_MapExport); fehlen sie, laufen Karte/Minimap nicht
 		MapGeo = Shared.Config:FindFirstChild("MapGeo") and require(Shared.Config.MapGeo) or nil,
 	},
@@ -178,6 +181,15 @@ Push.OnClientEvent:Connect(function(kind, data)
 		controllers.Crime.Heist(ctx, data)
 	elseif kind == "OpenFence" then
 		controllers.Crime.Fence(ctx, data)
+	-- Prompt 10: Autohaus/Garage/Tuning, Immobilien, Aktivitaeten
+	elseif kind == "OpenVehicles" then
+		ctx.Open("Vehicles", data)
+	elseif kind == "OpenProperty" then
+		ctx.Open("Property", data)
+	elseif kind == "PropertyRing" then
+		controllers.Property.Ring(ctx, data)
+	elseif kind == "Activity" then
+		controllers.Activity.Push(ctx, data)
 	end
 end)
 
@@ -224,6 +236,7 @@ controllers.Phone.Start(ctx)
 task.spawn(controllers.FireTools.Start, ctx)
 controllers.WeaponHud.Start(ctx)
 task.spawn(controllers.Crime.Start, ctx)
+controllers.Activity.Start(ctx)
 
 -- Profil anfordern (falls der erste Push vor dem Laden dieses Skripts kam)
 task.spawn(function()

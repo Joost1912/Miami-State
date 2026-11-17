@@ -497,8 +497,15 @@ table.insert(Apps, { Id = "Jobs", Name = "Jobs", Icon = "💼", Color = Color3.f
 	Phone.Close()
 	ctxRef.Open("Jobs")
 end })
-table.insert(Apps, { Id = "Estate", Name = "Immobilien", Icon = "🏠", Color = Color3.fromRGB(90, 170, 90), Open = comingSoon("Immobilien", "Wohnungen und Haeuser kaufen oder mieten.") })
-table.insert(Apps, { Id = "CarTrade", Name = "Autohandel", Icon = "🏎", Color = Color3.fromRGB(240, 90, 60), Open = comingSoon("Fahrzeughandel", "Neu- und Gebrauchtwagen kaufen und verkaufen.") })
+-- Prompt 10: Immobilien (eigene Wohnungen verwalten) und Garage/Autohandel oeffnen die grossen Menues
+table.insert(Apps, { Id = "Estate", Name = "Immobilien", Icon = "🏠", Color = Color3.fromRGB(90, 170, 90), Open = function()
+	Phone.Close()
+	ctxRef.Open("Property", { Manage = true })
+end })
+table.insert(Apps, { Id = "CarTrade", Name = "Garage", Icon = "🏎", Color = Color3.fromRGB(240, 90, 60), Open = function()
+	Phone.Close()
+	ctxRef.Open("Vehicles", { Tab = "Garage" })
+end })
 table.insert(Apps, { Id = "Messages", Name = "Nachrichten", Icon = "💬", Color = Color3.fromRGB(80, 210, 110), Open = comingSoon("Nachrichten", "Private Nachrichten an deine Kontakte.") })
 table.insert(Apps, { Id = "Business", Name = "Firmen", Icon = "🏢", Color = Color3.fromRGB(150, 110, 220), Open = comingSoon("Unternehmen", "Eigene Firmen gruenden und verwalten.") })
 

@@ -8,8 +8,23 @@ return {
 	POI = {
 		{ "Guns", "Suncoast Arms (Waffenladen)", 383, -559 },
 		{ "Guns", "Everglades Outfitters (Langwaffen)", -2496, -1059 },
+		-- Prompt 10: Apartments, Autohaeuser, Downtown-Aktivitaeten
+		{ "Home", "Bayfront One (Luxus/Penthouse)", 673, -330 },
+		{ "Home", "Brickell Heights (Stadtwohnungen)", 594, -1370 },
+		{ "Home", "Ocean Drive Residences", 2348, -1006 },
+		{ "Home", "Sawgrass Gardens", -2694, -143 },
+		{ "Dealership", "Bayfront Prestige (Luxus-Autohaus)", -290, -1127 },
+		{ "Dealership", "Sawgrass Motors (Autohaus)", -2693, 775 },
+		{ "Workshop", "Tuning-Werkstatt", -3570, -823 },
+		{ "Leisure", "Bayfront Social (Kino, Bowling, Arcade)", 752, -156 },
+		{ "Leisure", "Iron Bay Fitness", 752, -243 },
+		{ "Leisure", "Bayfront Court (Basketball)", 965, 780 },
+		{ "Restaurant", "Maison Azure (Fine Dining)", -205, -1370 },
+		{ "Restaurant", "Bayfront Kitchen", 168, -1370 },
+		{ "Restaurant", "SKYLINE 52 (Rooftop)", 594, 556 },
 	},
 	Remove = {
+		{ "Autohaus", -2693, 779 },
 		{ "SUNSET BARBERS", 383, -559 },
 		{ "SURF SHOP", -2496, -1059 },
 	},

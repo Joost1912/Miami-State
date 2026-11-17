@@ -98,7 +98,108 @@ Shops.Catalogs = {
 	},
 	Cafe = {
 		Title = "Cafe", Kind = "Retail", Icon = "☕", Color = rgb(170, 110, 70),
-		Items = { { Id = "Coffee", Price = 4 }, { Id = "Snack", Price = 5 } },
+		Items = { { Id = "Coffee", Price = 4 }, { Id = "IcedCoffee", Price = 5 }, { Id = "Croissant", Price = 4 }, { Id = "Donut", Price = 3 }, { Id = "Smoothie", Price = 6 }, { Id = "Snack", Price = 5 } },
+	},
+	-- Prompt 10: Gastronomie (Downtown & Stadt) --------------------------------------------------------
+	Diner = {
+		Title = "American Diner", Subtitle = "Pancakes, Burger & Milkshakes - seit 1958", Kind = "Restaurant", Icon = "🍔", Color = rgb(230, 70, 70),
+		Items = { { Id = "Pancakes", Price = 9 }, { Id = "Burger", Price = 11 }, { Id = "Fries", Price = 4 }, { Id = "Milkshake", Price = 6 }, { Id = "Coffee", Price = 3 }, { Id = "Soda", Price = 3 } },
+	},
+	FastFood = {
+		Title = "Fast Food", Subtitle = "Schnell, heiss, guenstig", Kind = "Restaurant", Icon = "🍟", Color = rgb(250, 190, 40),
+		Items = { { Id = "Burger", Price = 7 }, { Id = "Fries", Price = 3 }, { Id = "Milkshake", Price = 4 }, { Id = "Soda", Price = 2 } },
+	},
+	Pizzeria = {
+		Title = "Pizzeria", Subtitle = "Steinofen-Pizza", Kind = "Restaurant", Icon = "🍕", Color = rgb(220, 90, 50),
+		Items = { { Id = "Pizza", Price = 12 }, { Id = "Pasta", Price = 13 }, { Id = "Salad", Price = 9 }, { Id = "Lemonade", Price = 4 }, { Id = "Gelato", Price = 5 } },
+	},
+	Sushi = {
+		Title = "Sushi Bar", Subtitle = "Frischer Fisch aus der Bucht", Kind = "Restaurant", Icon = "🍣", Color = rgb(230, 100, 110),
+		Items = { { Id = "Sushi", Price = 16 }, { Id = "Salad", Price = 8 }, { Id = "WaterBottle", Price = 3 }, { Id = "Mocktail", Price = 7 } },
+	},
+	Mexican = {
+		Title = "Taqueria", Subtitle = "Tacos, Salsa, Limonade", Kind = "Restaurant", Icon = "🌮", Color = rgb(120, 190, 70),
+		Items = { { Id = "Tacos", Price = 9 }, { Id = "Lemonade", Price = 4 }, { Id = "Soda", Price = 3 } },
+	},
+	Cuban = {
+		Title = "Cuban Cafe", Subtitle = "Cafecito und Cubanos wie in Little Havana", Kind = "Restaurant", Icon = "🥪", Color = rgb(240, 160, 60),
+		Items = { { Id = "Cubano", Price = 10 }, { Id = "Coffee", Price = 3 }, { Id = "Croissant", Price = 4 }, { Id = "Smoothie", Price = 6 } },
+	},
+	Grill = {
+		Title = "Grill & Seafood", Subtitle = "Vom Grill und aus dem Meer", Kind = "Restaurant", Icon = "🍤", Color = rgb(70, 160, 220),
+		Items = { { Id = "Burger", Price = 13 }, { Id = "Steak", Price = 32 }, { Id = "Salad", Price = 11 }, { Id = "Lemonade", Price = 5 }, { Id = "Mocktail", Price = 8 } },
+	},
+	BBQ = {
+		Title = "Smokehouse BBQ", Kind = "Restaurant", Icon = "🍖", Color = rgb(150, 80, 40),
+		Items = { { Id = "Ribs", Price = 22 }, { Id = "Burger", Price = 12 }, { Id = "Fries", Price = 4 }, { Id = "Lemonade", Price = 4 } },
+	},
+	Thai = {
+		Title = "Thai Kueche", Kind = "Restaurant", Icon = "🍜", Color = rgb(200, 120, 200),
+		Items = { { Id = "PadThai", Price = 13 }, { Id = "Salad", Price = 8 }, { Id = "Smoothie", Price = 6 } },
+	},
+	Gelateria = {
+		Title = "Gelateria", Kind = "Restaurant", Icon = "🍨", Color = rgb(250, 170, 200),
+		Items = { { Id = "Gelato", Price = 5 }, { Id = "Milkshake", Price = 6 }, { Id = "IcedCoffee", Price = 5 } },
+	},
+	Bakery = {
+		Title = "Baeckerei", Kind = "Restaurant", Icon = "🥐", Color = rgb(200, 150, 90),
+		Items = { { Id = "Croissant", Price = 3 }, { Id = "Donut", Price = 3 }, { Id = "Sandwich", Price = 6 }, { Id = "Coffee", Price = 3 } },
+	},
+	ModernKitchen = {
+		Title = "Bayfront Kitchen", Subtitle = "Modernes Restaurant - saisonale Kueche", Kind = "Restaurant", Icon = "🍽", Color = rgb(64, 224, 255),
+		Items = { { Id = "Salad", Price = 14 }, { Id = "Pasta", Price = 19 }, { Id = "Steak", Price = 38 }, { Id = "Sushi", Price = 22 }, { Id = "Lemonade", Price = 6 }, { Id = "Mocktail", Price = 9 } },
+	},
+	FineDining = {
+		Title = "Maison Azure", Subtitle = "Fine Dining - franzoesisch-karibische Kueche", Kind = "Restaurant", Icon = "🦞", Color = rgb(220, 180, 90),
+		Info = "Reservierung nicht noetig. Smart Casual erwuenscht.",
+		Items = { { Id = "Lobster", Price = 95 }, { Id = "Steak", Price = 72 }, { Id = "Salad", Price = 24 }, { Id = "Mocktail", Price = 16 }, { Id = "Gelato", Price = 14 } },
+	},
+	Rooftop = {
+		Title = "SKYLINE 52", Subtitle = "Rooftop-Restaurant & Bar ueber Bayfront", Kind = "Restaurant", Icon = "🌇", Color = rgb(255, 120, 80),
+		Items = { { Id = "Sushi", Price = 26 }, { Id = "Steak", Price = 54 }, { Id = "Salad", Price = 18 }, { Id = "Mocktail", Price = 12 }, { Id = "Lemonade", Price = 7 } },
+	},
+	ClubBar = {
+		Title = "Club-Bar", Subtitle = "Drinks (alkoholfrei) und VIP-Zugang", Kind = "Restaurant", Icon = "🍹", Color = rgb(255, 72, 168),
+		Info = "Das VIP-Armband gilt dauerhaft fuer die VIP-Lounges aller Clubs.",
+		Items = { { Id = "Mocktail", Price = 9 }, { Id = "EnergyDrink", Price = 6 }, { Id = "WaterBottle", Price = 4 }, { Id = "Lemonade", Price = 6 }, { Id = "VIPPass", Price = 750 } },
+	},
+	CinemaBox = {
+		Title = "Bayfront Social - Kasse", Subtitle = "Kino, Bowling, Arcade", Kind = "Restaurant", Icon = "🎬", Color = rgb(150, 90, 255),
+		Items = { { Id = "CinemaTicket", Price = 12 }, { Id = "Snack", Price = 4 }, { Id = "Soda", Price = 3 }, { Id = "Chips", Price = 3 } },
+	},
+	GymDesk = {
+		Title = "Iron Bay Fitness - Empfang", Subtitle = "Mitgliedschaft, Getraenke", Kind = "Retail", Icon = "🏋", Color = rgb(80, 220, 140),
+		Info = "Mit Mitgliedschaft trainierst du ohne Tagesgebuehr ($15).",
+		Items = { { Id = "GymPass", Price = 450 }, { Id = "WaterBottle", Price = 2 }, { Id = "EnergyDrink", Price = 4 }, { Id = "Smoothie", Price = 6 } },
+	},
+	-- Prompt 10: weitere Geschaefte
+	Sports = {
+		Title = "Pro Sports", Subtitle = "Sportartikel", Kind = "Retail", Icon = "🏀", Color = rgb(255, 140, 50),
+		Items = { { Id = "Basketball", Price = 35 }, { Id = "WaterBottle", Price = 2 }, { Id = "Sunglasses", Price = 60 }, { Id = "EnergyDrink", Price = 4 } },
+	},
+	Books = {
+		Title = "Buchhandlung", Kind = "Retail", Icon = "📚", Color = rgb(170, 130, 90),
+		Items = { { Id = "Book", Price = 18 }, { Id = "Coffee", Price = 4 } },
+	},
+	Florist = {
+		Title = "Blumenladen", Kind = "Retail", Icon = "💐", Color = rgb(240, 120, 170),
+		Items = { { Id = "Flowers", Price = 35 } },
+	},
+	Toys = {
+		Title = "Spielwaren", Kind = "Retail", Icon = "🧸", Color = rgb(255, 190, 60),
+		Items = { { Id = "Toy", Price = 25 }, { Id = "Basketball", Price = 30 } },
+	},
+	Surf = {
+		Title = "Surf & Sun", Subtitle = "Surfbretter, Sonnenbrillen, Strand", Kind = "Retail", Icon = "🏄", Color = rgb(60, 200, 230),
+		Items = { { Id = "Surfboard", Price = 480 }, { Id = "Sunglasses", Price = 55 }, { Id = "Sunscreen", Price = 12 } },
+	},
+	Optician = {
+		Title = "Optiker", Kind = "Clothing", Icon = "👓", Color = rgb(120, 160, 230),
+		Items = { { Id = "Glasses_Clear", Price = 40 }, { Id = "Shades_Black", Price = 45 }, { Id = "Shades_Gold", Price = 150 } },
+	},
+	Market = {
+		Title = "Corner Market", Subtitle = "Kleiner Supermarkt", Kind = "Retail", Icon = "🛒", Color = rgb(90, 180, 110),
+		Items = { { Id = "WaterBottle", Price = 2 }, { Id = "Soda", Price = 2 }, { Id = "Sandwich", Price = 6 }, { Id = "Chips", Price = 3 }, { Id = "Fruit", Price = 3 }, { Id = "Batteries", Price = 6 } },
 	},
 }
 
@@ -121,6 +222,41 @@ Shops.ByName = {
 	["URBAN THREADS"] = "Clothing",
 	["SNEAKER STATION"] = "Sneakers",
 	["MIAMI GOLD JEWELERS"] = "Jeweler",
+	-- Prompt 10: Gastronomie und weitere Geschaefte an bestehenden Ladenmarkern
+	["LITTLE HAVANA DINER"] = "Diner",
+	["SAWGRASS DINER"] = "Diner",
+	["THE BURGER JOINT"] = "FastFood",
+	["BURGER BAR"] = "FastFood",
+	["STAR BURGER"] = "FastFood",
+	["MIAMI PIZZA CO."] = "Pizzeria",
+	["PIZZA NAPOLI"] = "Pizzeria",
+	["PIZZA SLICE"] = "Pizzeria",
+	["PASTA PALMA"] = "Pizzeria",
+	["SUSHI WAVE"] = "Sushi",
+	["SUSHI GO"] = "Sushi",
+	["OCEAN TACOS"] = "Mexican",
+	["TACO LOCO"] = "Mexican",
+	["TAQUERIA"] = "Mexican",
+	["LA COCINA"] = "Mexican",
+	["CUBAN CORNER CAFE"] = "Cuban",
+	["BAYSIDE GRILL"] = "Grill",
+	["DELI & GRILL"] = "Grill",
+	["SMOKEHOUSE BBQ"] = "BBQ",
+	["THAI ORCHID"] = "Thai",
+	["GELATERIA"] = "Gelateria",
+	["GELATO"] = "Gelateria",
+	["BAKERY"] = "Bakery",
+	["PRO SPORTS"] = "Sports",
+	["BOOK NOOK"] = "Books",
+	["BAYSIDE BOOKS"] = "Books",
+	["FLOWER SHOP"] = "Florist",
+	["FLORIDA FLOWERS"] = "Florist",
+	["TOY BOX"] = "Toys",
+	["SURF & SUN"] = "Surf",
+	["OPTICIAN"] = "Optician",
+	["OPTICAL VISION"] = "Optician",
+	["CORNER MARKET"] = "Market",
+	["THRIFT SHOP"] = "Clothing",
 }
 
 return Shops

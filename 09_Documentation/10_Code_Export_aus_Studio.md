@@ -28,4 +28,6 @@ Aus dem alten lokalen Repo `C:\Dev\MIAMI STATE` (Commit b8eb452) uebernommen, we
 
 `MapBuild/Steps/17_Vehicles.luau` und `18_Gameplay.luau` (auch `13_Night`, `22_MapExport`) **installieren Skripte aus dem Repo in Studio und ueberschreiben dabei die Studio-Fassung**. Sie duerfen nur nach diesem Abgleich und nur mit diesem Repo-Stand ausgefuehrt werden.
 
-Zusaetzlich gilt: `18_Gameplay` kennt nur die Modulliste von Phase 7. Die Module aus Prompt 08/09 fehlen dort (`Config.Clothing`, `Config.Crime`, `Config.MapGeo`/`MapExtra`, `WeaponService`, `ClothingService`, `WantedService`, `CrimeService`, Controller `WeaponHud`, `Crime`). Da der Schritt `MainClient` komplett neu anlegt, wuerden die Controller `WeaponHud` und `Crime` verloren gehen. **18_Gameplay vor einem erneuten Lauf um diese Module erweitern.**
+**Nachtrag Prompt 10:** Die Modullisten in `18_Gameplay` wurden um alle Module aus Prompt 08–10 ergaenzt; seither ist Studio wieder = Repo (75 Skripte). Der folgende Absatz beschreibt den Stand vor dieser Korrektur.
+
+Urspruenglich galt: `18_Gameplay` kannte nur die Modulliste von Phase 7. Die Module aus Prompt 08/09 fehlen dort (`Config.Clothing`, `Config.Crime`, `Config.MapGeo`/`MapExtra`, `WeaponService`, `ClothingService`, `WantedService`, `CrimeService`, Controller `WeaponHud`, `Crime`). Da der Schritt `MainClient` komplett neu anlegt, wuerden die Controller `WeaponHud` und `Crime` verloren gehen. **18_Gameplay vor einem erneuten Lauf um diese Module erweitern.**

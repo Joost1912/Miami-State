@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("MiamiShared")
 local Factions = require(Shared.Config.Factions)
 local PoliceCfg = require(Shared.Config.Police)
+local VehicleCfg = require(Shared.Config.Vehicles) -- Prompt 10: Katalog, Tuning, Tank
 
 local VehicleService = {}
 local S
@@ -190,6 +191,9 @@ function VehicleService.Despawn(model)
 		end
 	end
 	local _ = seat
+	if VehicleService.OnDespawn then
+		pcall(VehicleService.OnDespawn, model) -- Prompt 10: Tankstand ins Profil uebernehmen
+	end
 	local plate = model:GetAttribute("Plate")
 	if plate and registry[plate] and registry[plate].Model == model then
 		registry[plate] = nil
@@ -207,11 +211,24 @@ function VehicleService.Lookup(plate)
 	if typeof(plate) ~= "string" then
 		return nil
 	end
-	local r = registry[plate:upper()]
-	if not r or not r.Model.Parent then
-		return nil
+	plate = plate:upper()
+	local r = registry[plate]
+	if r and r.Model.Parent then
+		r.Plate = plate
+		r.Status = "Im Strassenverkehr"
+		return r
 	end
-	return r
+	-- Prompt 10: eingeparkte Fahrzeuge (Garage) online befindlicher Halter
+	for _, p in ipairs(Players:GetPlayers()) do
+		local d = S.DataService.Get(p)
+		for _, v in ipairs(d and d.Vehicles.Owned or {}) do
+			if v.Plate == plate then
+				local spec = VehicleCfg.ById[v.Type]
+				return { Plate = plate, Type = spec and spec.Name or v.Type, OwnerUserId = p.UserId, OwnerName = rpName(p), Kind = "Civilian", Registered = true, Status = "In der Garage" }
+			end
+		end
+	end
+	return nil
 end
 
 -- Fahrzeug, in dem ein Spieler sitzt (und ob am Steuer)
@@ -286,8 +303,11 @@ function VehicleService.OwnedList(player)
 		local m = liveModel(player, v)
 		local ch = m and m:FindFirstChild("Chassis")
 		local spec = ServerStorage.Vehicles:FindFirstChild("Vehicle_" .. v.Type)
+		local cat = VehicleCfg.ById[v.Type]
 		table.insert(out, {
-			Id = v.Id, Type = v.Type, Name = v.Name or v.Type, Plate = v.Plate, Color = v.Color, Bought = v.Bought,
+			Id = v.Id, Type = v.Type, Name = (cat and (v.Name == nil or v.Name == v.Type)) and cat.Name or (v.Name or v.Type), Plate = v.Plate, Color = v.Color, Bought = v.Bought,
+			Class = cat and cat.Class, Price = v.Price or 0, Fuel = math.floor(m and (m:GetAttribute("Fuel") or 100) or (v.Fuel or 100)),
+			Tuning = v.Tuning or {}, SellValue = VehicleService.SellValue(v), Driving = m ~= nil and VehicleService.DriverOf(m) ~= nil,
 			Out = m ~= nil, X = ch and math.floor(ch.Position.X), Z = ch and math.floor(ch.Position.Z),
 			MaxSpeed = spec and spec:GetAttribute("MaxSpeed"), Seats = spec and (#spec:GetChildren() > 0) and (function()
 				local n = 0
@@ -336,7 +356,94 @@ local function freeSpotNear(pos)
 	return best, bd
 end
 
-function VehicleService.SpawnOwned(player, id)
+-- Prompt 10: Hilfsfunktionen fuer Autohaus/Garage (DealershipService) ------------------------------
+VehicleService.OwnedEntry = ownedEntry
+VehicleService.LiveModel = liveModel
+VehicleService.FreeSpotNear = freeSpotNear
+function VehicleService.NewPlate()
+	return newPlate("Civilian")
+end
+function VehicleService.SellValue(entry)
+	local price = entry.Price or 0
+	if price <= 0 then
+		return VehicleCfg.StarterValue
+	end
+	return math.floor(price * VehicleCfg.SellFactor / 50) * 50
+end
+
+-- Optik eines Fahrzeugs nach Profil-Eintrag: Lack, Felgen, Toenung, Unterbodenlicht, Scheinwerfer
+function VehicleService.ApplyLook(m, entry)
+	local tuning = entry.Tuning or {}
+	local function opt(cat)
+		local o = VehicleCfg.Tuning[cat].Options
+		return o[tuning[cat] or 1] or o[1]
+	end
+	local rims = opt("Rims")
+	if rims.C then
+		for _, p in ipairs(m:GetChildren()) do
+			if p:IsA("BasePart") and (p.Name == "Rim" or p.Name == "HubCap" or p.Name == "Spoke") then
+				p.Color = rims.C
+				p.Material = Enum.Material[rims.M or "Metal"]
+			end
+		end
+	end
+	local tint = opt("Tint")
+	if tint.T then
+		for _, p in ipairs(m.Body:GetChildren()) do
+			if p:IsA("BasePart") and (p.Name == "Windshield" or p.Name == "RearWindow" or p.Name == "Cabin" or p.Name:find("Window")) then
+				p.Color = Color3.fromRGB(10, 12, 16)
+				p.Transparency = math.max(p.Transparency, 0)
+				p.Reflectance = tint.T
+			end
+		end
+	end
+	local lights = opt("Lights")
+	if lights.C then
+		for _, p in ipairs(m.Body:GetChildren()) do
+			if p:IsA("BasePart") and p.Name == "Headlight" then
+				p.Color = lights.C
+				local l = p:FindFirstChildWhichIsA("Light")
+				if l then
+					l.Color = lights.C
+				end
+			end
+		end
+	end
+	local glow = opt("Underglow")
+	local old = m:FindFirstChild("Underglow")
+	if old then
+		old:Destroy()
+	end
+	if glow.C then
+		local ch = m:FindFirstChild("Chassis")
+		if ch then
+			local p = Instance.new("Part")
+			p.Name = "Underglow"
+			p.Size = Vector3.new(ch.Size.X * 0.8, 0.1, ch.Size.Z * 0.85)
+			p.CFrame = ch.CFrame * CFrame.new(0, -ch.Size.Y / 2 - 0.15, 0)
+			p.Color = glow.C
+			p.Material = Enum.Material.Neon
+			p.CanCollide, p.CanQuery, p.CanTouch, p.Massless = false, false, false, true
+			p.Transparency = 0.2
+			local w = Instance.new("WeldConstraint")
+			w.Part0, w.Part1 = p, ch
+			w.Parent = p
+			local light = Instance.new("SurfaceLight")
+			light.Face = Enum.NormalId.Bottom
+			light.Color = glow.C
+			light.Brightness = 3
+			light.Range = 10
+			light.Parent = p
+			p.Parent = m
+		end
+	end
+	local cat = VehicleCfg.ById[entry.Type]
+	m:SetAttribute("DisplayName", cat and cat.Name or entry.Name or entry.Type)
+	m:SetAttribute("Fuel", math.clamp(entry.Fuel or 100, 0, 100))
+	m:SetAttribute("OwnedId", entry.Id)
+end
+
+function VehicleService.SpawnOwned(player, id, atCFrame)
 	local entry = ownedEntry(player, id)
 	if not entry then
 		return false, "Fahrzeug nicht gefunden"
@@ -348,7 +455,12 @@ function VehicleService.SpawnOwned(player, id)
 	if not root then
 		return false, "Nicht moeglich"
 	end
-	local spot, dist = freeSpotNear(root.Position)
+	local spot, dist
+	if typeof(atCFrame) == "CFrame" then
+		spot, dist = { CFrame = atCFrame, Position = atCFrame.Position }, (atCFrame.Position - root.Position).Magnitude
+	else
+		spot, dist = freeSpotNear(root.Position)
+	end
 	if not spot then
 		return false, "Kein freier Parkplatz in der Naehe (" .. SPAWN_SEARCH .. " Studs)"
 	end
@@ -357,6 +469,7 @@ function VehicleService.SpawnOwned(player, id)
 	if not m then
 		return false, err
 	end
+	VehicleService.ApplyLook(m, entry)
 	return true, string.format("%s steht bereit (%d m entfernt)", entry.Plate, math.floor(dist * 0.28)), { X = spot.Position.X, Y = spot.Position.Y, Z = spot.Position.Z, Label = entry.Plate }
 end
 
@@ -483,6 +596,33 @@ function VehicleService.Start()
 				local ch = m:FindFirstChild("Chassis")
 				if not ch or ch.Position.Y < -60 then
 					VehicleService.Despawn(m)
+				end
+			end
+		end
+	end)
+	-- Prompt 10: Tankverbrauch (nur Privatfahrzeuge mit Attribut Fuel; Dienstfahrzeuge haben keinen Tank)
+	task.spawn(function()
+		local lastPos = setmetatable({}, { __mode = "k" })
+		while true do
+			task.wait(1)
+			for _, m in ipairs(folder:GetChildren()) do
+				local fuel = m:GetAttribute("Fuel")
+				local ch = m:FindFirstChild("Chassis")
+				if fuel and ch and fuel > 0 then
+					local prev = lastPos[m]
+					lastPos[m] = ch.Position
+					if prev and VehicleService.DriverOf(m) then
+						local d = (ch.Position - prev).Magnitude
+						if d > 0.5 and d < 400 then
+							local cat = VehicleCfg.ById[m:GetAttribute("VehicleType") or ""]
+							local nf = math.max(0, fuel - d * VehicleCfg.FuelPerStud * (cat and cat.Thirst or 1))
+							m:SetAttribute("Fuel", math.floor(nf * 100) / 100)
+							local p = nf <= 0 and VehicleService.DriverOf(m)
+							if p then
+								S.Push(p, "Notify", { Text = "Tank leer - Fahrzeug ueber die Garage abschleppen lassen oder an der Zapfsaeule tanken", Kind = "error" })
+							end
+						end
+					end
 				end
 			end
 		end

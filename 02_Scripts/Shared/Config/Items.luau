@@ -13,6 +13,7 @@ Items.Categories = {
 	{ Id = "Gear", Name = "Zubehoer", Color = Color3.fromRGB(150, 200, 120) },
 	{ Id = "Valuables", Name = "Wertsachen", Color = Color3.fromRGB(255, 215, 120) },
 	{ Id = "Loot", Name = "Beute", Color = Color3.fromRGB(255, 86, 96) },
+	{ Id = "Leisure", Name = "Freizeit", Color = Color3.fromRGB(255, 72, 168) }, -- Prompt 10
 	{ Id = "Misc", Name = "Sonstiges", Color = Color3.fromRGB(170, 176, 190) },
 }
 
@@ -77,6 +78,39 @@ Items.Defs = {
 	GoldRing = { Name = "Goldring", Category = "Valuables", Stack = 5, Desc = "14 Karat." },
 	Necklace = { Name = "Halskette", Category = "Valuables", Stack = 3, Desc = "Feine Goldkette." },
 	DiamondEarrings = { Name = "Diamant-Ohrstecker", Category = "Valuables", Stack = 2, Desc = "Brillanten in Weissgold." },
+	-- Prompt 10: Restaurants, Cafes, Bars (Use "Meal": heilt wenig, Amount), Freizeit, Shopping
+	Burger = { Name = "Cheeseburger", Category = "Food", Stack = 5, Use = "Meal", Amount = 6, Desc = "Doppelt Kaese, frisch vom Grill." },
+	Fries = { Name = "Pommes", Category = "Food", Stack = 5, Use = "Meal", Amount = 3, Desc = "Knusprig, mit Meersalz." },
+	Milkshake = { Name = "Milkshake", Category = "Food", Stack = 5, Use = "Meal", Amount = 3, Desc = "Vanille, Erdbeer oder Schoko." },
+	Pancakes = { Name = "Pancakes", Category = "Food", Stack = 5, Use = "Meal", Amount = 6, Desc = "Mit Ahornsirup - Diner-Klassiker." },
+	Pizza = { Name = "Pizza", Category = "Food", Stack = 4, Use = "Meal", Amount = 8, Desc = "Steinofen, Margherita oder Pepperoni." },
+	Sushi = { Name = "Sushi-Platte", Category = "Food", Stack = 4, Use = "Meal", Amount = 7, Desc = "Nigiri und Maki." },
+	Tacos = { Name = "Tacos", Category = "Food", Stack = 5, Use = "Meal", Amount = 6, Desc = "Drei Tacos mit Salsa." },
+	Cubano = { Name = "Cubano-Sandwich", Category = "Food", Stack = 5, Use = "Meal", Amount = 7, Desc = "Schwein, Schinken, Kaese, Pickles." },
+	Pasta = { Name = "Pasta", Category = "Food", Stack = 4, Use = "Meal", Amount = 7, Desc = "Hausgemachte Tagliatelle." },
+	Steak = { Name = "Ribeye-Steak", Category = "Food", Stack = 3, Use = "Meal", Amount = 10, Desc = "Dry aged, medium rare." },
+	Lobster = { Name = "Hummer", Category = "Food", Stack = 2, Use = "Meal", Amount = 10, Desc = "Florida Spiny Lobster mit Butter." },
+	Salad = { Name = "Bowl & Salat", Category = "Food", Stack = 5, Use = "Meal", Amount = 5, Desc = "Quinoa, Avocado, Mango." },
+	Ribs = { Name = "BBQ Ribs", Category = "Food", Stack = 3, Use = "Meal", Amount = 9, Desc = "Langsam gegart, rauchig." },
+	PadThai = { Name = "Pad Thai", Category = "Food", Stack = 4, Use = "Meal", Amount = 7, Desc = "Reisnudeln, Erdnuss, Limette." },
+	Donut = { Name = "Donut", Category = "Food", Stack = 6, Use = "Meal", Amount = 2, Desc = "Glasiert." },
+	Croissant = { Name = "Croissant", Category = "Food", Stack = 6, Use = "Meal", Amount = 3, Desc = "Buttrig und frisch." },
+	Gelato = { Name = "Gelato", Category = "Food", Stack = 4, Use = "Meal", Amount = 2, Desc = "Zwei Kugeln nach Wahl." },
+	IcedCoffee = { Name = "Iced Latte", Category = "Food", Stack = 5, Use = "Meal", Amount = 2, Desc = "Kalt gebruehter Kaffee." },
+	Smoothie = { Name = "Smoothie", Category = "Food", Stack = 5, Use = "Meal", Amount = 3, Desc = "Mango-Maracuja." },
+	Mocktail = { Name = "Mocktail (alkoholfrei)", Category = "Food", Stack = 5, Use = "Meal", Amount = 2, Desc = "Virgin Mojito oder Sunrise." },
+	Lemonade = { Name = "Hausgemachte Limonade", Category = "Food", Stack = 5, Use = "Meal", Amount = 2, Desc = "Limette und Minze." },
+	CinemaTicket = { Name = "Kinoticket", Category = "Leisure", Stack = 4, Desc = "Eintritt fuer den Kinosaal (Bayfront Social)." },
+	VIPPass = { Name = "VIP-Armband", Category = "Leisure", Stack = 1, Desc = "Zugang zu den VIP-Lounges der Clubs. Gilt dauerhaft." },
+	GymPass = { Name = "Fitness-Mitgliedschaft", Category = "Leisure", Stack = 1, Desc = "Training im Iron Bay Fitness ohne Tagesgebuehr." },
+	Basketball = { Name = "Basketball", Category = "Leisure", Stack = 1, Desc = "Fuer den Court an der Bayfront-Promenade." },
+	Book = { Name = "Buch", Category = "Misc", Stack = 5, Desc = "Ein Roman fuer den Strand." },
+	Flowers = { Name = "Blumenstrauss", Category = "Misc", Stack = 3, Desc = "Frische Blumen." },
+	Toy = { Name = "Spielzeug", Category = "Misc", Stack = 3, Desc = "Ein Geschenk." },
+	Headphones = { Name = "Kopfhoerer", Category = "Tools", Stack = 1, Desc = "Kabellos, mit Geraeuschunterdrueckung." },
+	Laptop = { Name = "Laptop", Category = "Tools", Stack = 1, Desc = "Fuer Arbeit und Spiel." },
+	Sunglasses = { Name = "Sonnenbrille", Category = "Misc", Stack = 2, Desc = "Polarisiert." },
+	Surfboard = { Name = "Surfbrett", Category = "Leisure", Stack = 1, Desc = "Fuer die Wellen an Coral Key." },
 }
 
 Items.MaxSlots = 24

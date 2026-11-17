@@ -251,9 +251,11 @@ function C.Start(ctx)
 	ctxRef = ctx
 	local UI, T = ctx.UI, ctx.UI.Theme
 	scr = UI.screen("MiamiCrimeHUD", 7)
-	wantedBox = UI.new("Frame", { Name = "Wanted", Position = UDim2.fromOffset(20, 20), Size = UDim2.fromOffset(260, 52), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.12, Visible = false, Parent = scr })
-	heistBox = UI.new("Frame", { Name = "Heist", Position = UDim2.fromOffset(20, 82), Size = UDim2.fromOffset(320, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = T.Bg, BackgroundTransparency = 0.08, Visible = false, Parent = scr })
-	policeBox = UI.new("Frame", { Name = "PoliceAlert", Position = UDim2.fromOffset(20, 82), Size = UDim2.fromOffset(320, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = T.Bg, BackgroundTransparency = 0.08, Visible = false, Parent = scr })
+	-- Prompt 10: unter der Spieluhr (oben links) einreihen
+	local top = math.max(game:GetService("GuiService"):GetGuiInset().Y, 36) + 72
+	wantedBox = UI.new("Frame", { Name = "Wanted", Position = UDim2.fromOffset(16, top), Size = UDim2.fromOffset(260, 52), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.12, Visible = false, Parent = scr })
+	heistBox = UI.new("Frame", { Name = "Heist", Position = UDim2.fromOffset(16, top + 62), Size = UDim2.fromOffset(320, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = T.Bg, BackgroundTransparency = 0.08, Visible = false, Parent = scr })
+	policeBox = UI.new("Frame", { Name = "PoliceAlert", Position = UDim2.fromOffset(16, top + 62), Size = UDim2.fromOffset(320, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = T.Bg, BackgroundTransparency = 0.08, Visible = false, Parent = scr })
 	-- oeffentlicher Status: Alarmlampen + Polizei-Meldung
 	local folder = ReplicatedStorage:WaitForChild("MiamiCrime", 30)
 	if folder then

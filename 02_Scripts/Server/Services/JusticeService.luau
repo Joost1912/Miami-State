@@ -691,7 +691,8 @@ function JusticeService.PlateLookup(officer, plate)
 	local d = owner and S.DataService.Get(owner)
 	S.Log("MDT", officer, nil, "Kennzeichen: " .. tostring(plate))
 	return true, nil, {
-		Plate = r.Model:GetAttribute("Plate"), Type = r.Type, Owner = r.OwnerName, Kind = r.Kind,
+		Plate = r.Plate or r.Model:GetAttribute("Plate"), Type = (r.Model and r.Model:GetAttribute("DisplayName")) or r.Type, Owner = r.OwnerName, Kind = r.Kind,
+		Status = r.Status, -- Prompt 10: "Im Strassenverkehr" | "In der Garage"
 		Registered = r.Registered and "Zugelassen" or "Nicht zugelassen",
 		OwnerLicense = d and (d.Record.LicenseSuspended and "Entzogen" or "Gueltig") or "Unbekannt",
 		OwnerWanted = d and d.Record.Wanted or false, OwnerId = r.OwnerUserId,

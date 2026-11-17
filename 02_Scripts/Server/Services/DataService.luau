@@ -70,6 +70,10 @@ local function defaults()
 		-- Schema 4 (Prompt 08): geladene Munition je Waffe, Kleidung (gekauft, aktuell getragen, gespeicherte Outfits)
 		Weapons = { Loaded = {} }, -- [itemId] = Schuss im Magazin
 		Wardrobe = { Owned = {}, Current = {}, Outfits = {} }, -- Owned: Liste von Kleidungs-Ids; Current: [Slot] = Id; Outfits: { {Slot=Id,...} }
+		-- Prompt 10: Freizeitwerte (Fitness 0-100, Bestwerte). Fahrzeuge/Immobilien erweitern bestehende Listen:
+		--   Vehicles.Owned[i] += { Price, Paint, Fuel, Tuning = { Rims, Tint, Underglow, Lights } }
+		--   Properties.Owned[i] = { Id, Building, Tier, Number, Mode = "Own"|"Rent", Price, RentUntil, Locked, Keys, Furniture, Storage }
+		Leisure = { Fitness = 0, Bowling = 0, Arcade = 0, Hoops = 0 },
 		Meta = { FirstJoin = os.time(), LastJoin = 0, LastSave = 0, RecentTx = {}, Session = nil },
 	}
 end

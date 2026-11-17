@@ -53,6 +53,9 @@ MapData.POICategories = {
 	{ Id = "Shop", Name = "Geschaefte", Icon = "🛍", Color = Color3.fromRGB(64, 224, 255), Mini = false },
 	{ Id = "Parking", Name = "Parkhaus", Icon = "🅿", Color = Color3.fromRGB(80, 140, 255), Mini = false },
 	{ Id = "Jobs", Name = "Arbeit & Behoerden", Icon = "💼", Color = Color3.fromRGB(200, 150, 90), Mini = true },
+	-- Prompt 10
+	{ Id = "Home", Name = "Apartments", Icon = "🏢", Color = Color3.fromRGB(120, 200, 140), Mini = true },
+	{ Id = "Leisure", Name = "Freizeit", Icon = "🎳", Color = Color3.fromRGB(170, 110, 255), Mini = false },
 }
 
 function MapData.Category(id)

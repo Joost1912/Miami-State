@@ -48,8 +48,9 @@ local function log(kind, actor, target, details)
 end
 
 -- Services laden
-local S = { Push = push, Log = log, Remotes = { Request = Request, Push = PushRemote, VehicleControl = VehicleControl, FireSpray = FireSpray } }
-for _, name in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService" }) do
+local S = { Push = push, Log = log, Format = require(Shared.Format), Remotes = { Request = Request, Push = PushRemote, VehicleControl = VehicleControl, FireSpray = FireSpray } }
+-- Prompt 10: DealershipService (Autohaus/Garage/Tuning), PropertyService (Apartments), ActivityService (Downtown)
+for _, name in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService" }) do
 	S[name] = require(ServicesFolder:WaitForChild(name))
 end
 S.DataService.SetPushRemote(PushRemote)
@@ -571,6 +572,19 @@ A["Map.NearestATM"] = function(player)
 	return true, nil, { X = best.X, Y = best.Y, Z = best.Z, Distance = math.floor(bd * 0.28) }
 end
 
+-- Prompt 10: Services koennen eigene Aktionen mitbringen (Tabelle Actions); vorhandene Namen werden nicht ueberschrieben
+for _, svc in pairs(S) do
+	if type(svc) == "table" and type(svc.Actions) == "table" then
+		for name, fn in pairs(svc.Actions) do
+			if A[name] == nil then
+				A[name] = fn
+			else
+				warn("[Main] Aktion doppelt, ignoriert: " .. name)
+			end
+		end
+	end
+end
+
 -- Dispatcher
 local NEEDS_CHARACTER = { ["Profile.Get"] = false, ["Character.Create"] = false }
 local DETAINED_OK = { ["Profile.Get"] = true, ["Players.List"] = true, ["Job.Info"] = true }
@@ -609,7 +623,7 @@ end
 
 -- Start
 S.DataService.Start()
-for _, name in ipairs({ "JobService", "PayrollService", "CharacterService", "InteractionService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService" }) do
+for _, name in ipairs({ "JobService", "PayrollService", "CharacterService", "InteractionService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService" }) do
 	S[name].Start()
 end
 -- Interaktionspunkte der Polizeiwache

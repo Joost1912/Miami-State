@@ -89,6 +89,12 @@ local function setNight(night)
 end
 
 Lighting.ClockTime = START_TIME
+-- Prompt 10: spaeter erzeugte Fenster (Wohnungs-Panoramen) sofort an Tag/Nacht anpassen
+CollectionService:GetInstanceAddedSignal("NightWindow"):Connect(function(p)
+	if isNight ~= nil and p:IsA("BasePart") then
+		p.Transparency = isNight and WINDOW_ON or 1
+	end
+end)
 local last = os.clock()
 local moodAcc = 99
 while true do
@@ -96,8 +102,13 @@ while true do
 	local now = os.clock()
 	local dt = now - last
 	last = now
+	local before = Lighting.ClockTime
 	Lighting.ClockTime = (Lighting.ClockTime + dt * 24 / (MINUTES_PER_DAY * 60)) % 24
 	local t = Lighting.ClockTime
+	-- Prompt 10: Wochentag fuer die HUD-Uhr (0 = Montag); Mitternacht -> naechster Tag
+	if t < before then
+		Lighting:SetAttribute("GameDay", ((Lighting:GetAttribute("GameDay") or 4) + 1) % 7)
+	end
 	moodAcc += dt
 	if moodAcc >= 2 then
 		moodAcc = 0

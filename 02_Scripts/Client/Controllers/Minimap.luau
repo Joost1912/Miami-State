@@ -1,4 +1,4 @@
--- Minimap oben rechts: gleiche Kartendaten wie die Stadtkarte (CityMap.Build), Norden oben, Spielerpfeil dreht mit.
+-- Minimap unten links (Prompt 10: GTA-Layout, rechteckig): gleiche Kartendaten wie die Stadtkarte (CityMap.Build), Norden oben, Spielerpfeil dreht mit.
 -- Zeigt Strassen, Gebaeude, wichtige Orte, Navigationsziel (am Rand angeheftet) und die Route.
 -- Leistung: Kartenebene wird einmal aufgebaut; pro Bild nur Position/Rotation weniger Objekte (Takt 30 Hz).
 local Players = game:GetService("Players")
@@ -11,14 +11,25 @@ local ctxRef, gui, holder, group, canvas, routeLayer, arrow, targetPin, district
 local S = 0.5 -- Pixel pro Stud bei Zoomstufe 2
 local ZOOMS = { 0.3, 0.5, 0.8, 1.2 }
 local zoomIdx = 2
-local SIZE = 230
+local W, H = 252, 164 -- Kartenausschnitt (Pixel)
+local faded, interior = false, false
 local forceUpdate = true
 
 function MM.Close() end
 
+local wantVisible = true
 local function setVisible(on)
+	wantVisible = on
 	if holder then
-		holder.Visible = on
+		holder.Visible = on and not faded
+	end
+end
+
+-- Prompt 10: beim Handy/Stadtkarte dezent ausblenden (HUD-Controller ruft das auf)
+function MM.SetFaded(on)
+	faded = on
+	if holder then
+		holder.Visible = wantVisible and not faded
 	end
 end
 
@@ -56,8 +67,8 @@ end
 
 function MM.Toggle()
 	if holder then
-		holder.Visible = not holder.Visible
-		ctxRef.Request("Phone.SaveSettings", { Minimap = holder.Visible }, true)
+		setVisible(not wantVisible)
+		ctxRef.Request("Phone.SaveSettings", { Minimap = wantVisible }, true)
 	end
 end
 
@@ -70,10 +81,10 @@ function MM.Start(ctx)
 		return
 	end
 	gui = UI.screen("MiamiMinimap", 4)
-	holder = UI.new("Frame", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -20, 0, 124), Size = UDim2.fromOffset(SIZE, SIZE + 30), BackgroundTransparency = 1, Parent = gui })
+	holder = UI.new("Frame", { Name = "Minimap", AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 16, 1, -26), Size = UDim2.fromOffset(W, H), BackgroundTransparency = 1, Parent = gui })
 	-- Kartenausschnitt mit runden Ecken (CanvasGroup schneidet auch gedrehte Teile sauber ab)
-	group = UI.new("CanvasGroup", { Size = UDim2.fromOffset(SIZE, SIZE), BackgroundColor3 = Color3.fromRGB(16, 38, 58), Parent = holder })
-	UI.corner(group, 18)
+	group = UI.new("CanvasGroup", { Size = UDim2.fromOffset(W, H), BackgroundColor3 = Color3.fromRGB(16, 38, 58), GroupTransparency = 0.06, Parent = holder })
+	UI.corner(group, 12)
 	canvas = UI.new("Frame", { BorderSizePixel = 0, Parent = group })
 	UI.new("UIScale", { Scale = ZOOMS[zoomIdx] / S, Parent = canvas })
 	CityMap.Build(canvas, S, { minimal = true })
@@ -93,25 +104,28 @@ function MM.Start(ctx)
 	end
 	MM.SetZoom(zoomIdx, true)
 	-- Rahmen, Spielerpfeil, Norden
-	local frame = UI.new("Frame", { Size = UDim2.fromOffset(SIZE, SIZE), BackgroundTransparency = 1, Parent = holder })
-	UI.corner(frame, 18)
-	UI.stroke(frame, Color3.fromRGB(230, 236, 246), 2, 0.35)
+	local frame = UI.new("Frame", { Size = UDim2.fromOffset(W, H), BackgroundTransparency = 1, Parent = holder })
+	UI.corner(frame, 12)
+	UI.stroke(frame, Color3.fromRGB(230, 236, 246), 1, 0.7)
+	-- Innenraum (Wohnungen, Clubs ueber der Bucht): Karte abdunkeln
+	local indoor = UI.new("TextLabel", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(8, 10, 16), BackgroundTransparency = 0.15, Font = T.FontBold, TextSize = 12, TextColor3 = T.Muted, Text = "INNENRAUM", Visible = false, ZIndex = 7, Parent = frame })
+	UI.corner(indoor, 12)
 	arrow = UI.new("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(22, 22), BackgroundTransparency = 1, Font = T.FontBlack, TextSize = 20, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0.1, Text = "▲", ZIndex = 5, Parent = frame })
-	local north = UI.new("TextLabel", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 4), Size = UDim2.fromOffset(18, 18), BackgroundColor3 = Color3.fromRGB(12, 14, 20), BackgroundTransparency = 0.2, Font = T.FontBlack, TextSize = 11, TextColor3 = Color3.fromRGB(255, 90, 90), Text = "N", ZIndex = 5, Parent = frame })
+	local north = UI.new("TextLabel", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -7, 0, 7), Size = UDim2.fromOffset(18, 18), BackgroundColor3 = Color3.fromRGB(12, 14, 20), BackgroundTransparency = 0.2, Font = T.FontBlack, TextSize = 11, TextColor3 = Color3.fromRGB(255, 90, 90), Text = "N", ZIndex = 5, Parent = frame })
 	UI.corner(north, 9)
 	targetPin = UI.new("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Size = UDim2.fromOffset(22, 22), BackgroundTransparency = 1, Font = T.FontBlack, TextSize = 18, Text = "📍", ZIndex = 6, Visible = false, Parent = frame })
 	-- Zoomknoepfe
 	for i, z in ipairs({ { "+", 1 }, { "−", -1 } }) do
-		local b = UI.button(frame, z[1], "secondary", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -6 - (2 - i) * 26), Size = UDim2.fromOffset(22, 22), TextSize = 14, ZIndex = 6, BackgroundTransparency = 0.2 })
+		local b = UI.button(frame, z[1], "secondary", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -6 - (2 - i) * 24), Size = UDim2.fromOffset(20, 20), TextSize = 13, ZIndex = 6, BackgroundTransparency = 0.35 })
 		b.MouseButton1Click:Connect(function()
 			MM.SetZoom(zoomIdx + z[2])
 		end)
 	end
 	-- Infozeile: Stadtteil, Navigationsdistanz
-	local bar = UI.new("Frame", { Position = UDim2.fromOffset(0, SIZE + 4), Size = UDim2.fromOffset(SIZE, 24), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.2, Parent = holder })
-	UI.corner(bar, 8)
-	districtLbl = UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(8, 0), Size = UDim2.new(0.62, -8, 1, 0), Font = T.FontBold, TextSize = 12, TextColor3 = T.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Text = "", Parent = bar })
-	distLbl = UI.new("TextLabel", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -8, 0, 0), Size = UDim2.new(0.38, 0, 1, 0), Font = T.FontBold, TextSize = 12, TextColor3 = Color3.fromRGB(80, 200, 255), TextXAlignment = Enum.TextXAlignment.Right, Text = "", Parent = bar })
+	local bar = UI.new("Frame", { Position = UDim2.fromOffset(6, 6), Size = UDim2.fromOffset(W - 36, 20), BackgroundColor3 = T.Bg, BackgroundTransparency = 0.35, ZIndex = 6, Parent = holder })
+	UI.corner(bar, 6)
+	districtLbl = UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(8, 0), Size = UDim2.new(0.62, -8, 1, 0), Font = T.FontBold, TextSize = 11, TextColor3 = T.Text, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Text = "", ZIndex = 6, Parent = bar })
+	distLbl = UI.new("TextLabel", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -8, 0, 0), Size = UDim2.new(0.38, 0, 1, 0), Font = T.FontBold, TextSize = 11, TextColor3 = Color3.fromRGB(80, 200, 255), TextXAlignment = Enum.TextXAlignment.Right, Text = "", ZIndex = 6, Parent = bar })
 
 	local Nav = CityMap.Nav
 	local function redrawRoute()
@@ -157,7 +171,12 @@ function MM.Start(ctx)
 		local mp = CityMap.ToMap(pos.X, pos.Z, S) * (zs / S)
 		if forceUpdate or not lastPos or (lastPos - pos).Magnitude > 0.3 then
 			forceUpdate = false
-			canvas.Position = UDim2.fromOffset(SIZE / 2 - mp.X, SIZE / 2 - mp.Y)
+			canvas.Position = UDim2.fromOffset(W / 2 - mp.X, H / 2 - mp.Y)
+			local inside = pos.Y > 520 -- Innenraeume (Wohnungen/Venues) liegen bei Y 600 ueber der Bucht
+			if inside ~= interior then
+				interior = inside
+				indoor.Visible = inside
+			end
 			lastPos = pos
 		end
 		local look = Workspace.CurrentCamera.CFrame.LookVector
@@ -171,12 +190,11 @@ function MM.Start(ctx)
 		if Nav.Target then
 			local tp = CityMap.ToMap(Nav.Target.X, Nav.Target.Z, S) * (zs / S)
 			local rel = tp - mp
-			local lim = SIZE / 2 - 12
-			if math.abs(rel.X) > lim or math.abs(rel.Y) > lim then
-				local k = lim / math.max(math.abs(rel.X), math.abs(rel.Y))
-				rel *= k
+			local k = math.max(math.abs(rel.X) / (W / 2 - 12), math.abs(rel.Y) / (H / 2 - 12))
+			if k > 1 then
+				rel /= k
 			end
-			targetPin.Position = UDim2.fromOffset(SIZE / 2 + rel.X, SIZE / 2 + rel.Y)
+			targetPin.Position = UDim2.fromOffset(W / 2 + rel.X, H / 2 + rel.Y)
 			targetPin.Visible = true
 			local d = Nav.Distance()
 			distLbl.Text = d and string.format("%d m", math.floor(d * 0.28)) or ""

@@ -90,7 +90,8 @@ local function bind(seat)
 		sign = model:GetAttribute("DriveSign") or -1,
 	}
 	hud = hud or makeHud()
-	hud.Enabled = true
+	-- Prompt 10: Anzeige uebernimmt das Premium-HUD (MiamiHUD); diese ScreenGui bleibt nur fuer Kompatibilitaet (Handy-Einstellungen)
+	hud.Enabled = false
 	hud.Frame.Help.Text = model:GetAttribute("Emergency") and "Q Blaulicht  R Sirene  T Ton  Y Horn  H Warnbl.  L Licht" or "W/S Gas  A/D Lenken  H Warnblinker  L Licht"
 end
 
@@ -122,6 +123,14 @@ RunService.Heartbeat:Connect(function()
 		return
 	end
 	local throttle, steer = c.seat.ThrottleFloat, c.seat.SteerFloat
+	-- Prompt 10: leerer Tank -> kein Antrieb mehr (Bremsen und Lenken bleiben)
+	local fuel = c.model:GetAttribute("Fuel")
+	if fuel and fuel <= 0 and throttle ~= 0 then
+		local sp = c.chassis.AssemblyLinearVelocity:Dot(c.chassis.CFrame.LookVector)
+		if (throttle > 0 and sp > -2) or (throttle < 0 and sp < 2) then
+			throttle = 0
+		end
+	end
 	local speed = c.chassis.AssemblyLinearVelocity:Dot(c.chassis.CFrame.LookVector)
 
 	-- Lenkung: bei hoher Geschwindigkeit weniger Einschlag
