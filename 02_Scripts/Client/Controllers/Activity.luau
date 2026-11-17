@@ -33,6 +33,15 @@ function Act.Push(ctx, data)
 		return
 	elseif data.Kind == "Eat" then
 		return
+	elseif data.Kind == "Emote" then
+		-- Prompt 12: Gesten aus dem Interaktionsmenue (Standard-Emotes von Roblox)
+		local h = hum()
+		if h then
+			pcall(function()
+				h:PlayEmote(data.Emote or "wave")
+			end)
+		end
+		return
 	end
 	if not data.Seconds then
 		return

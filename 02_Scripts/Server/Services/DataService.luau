@@ -64,8 +64,10 @@ local function defaults()
 		-- Schema 3: Verletzungszustand (ueberdauert Verlassen des Spiels), Smartphone
 		Medical = { State = "Healthy", Health = 100, DownSince = 0 },
 		Phone = {
-			Contacts = {}, -- { {UserId, Name, Added} }
-			Settings = { SoundVolume = 0.8, MusicVolume = 0.5, Minimap = true, MinimapZoom = 2, UIScale = 1, Particles = true, ShowHints = true, Wallpaper = 1 },
+			Contacts = {}, -- { {UserId, Name, Added, Number, Favorite} }
+			-- Prompt 12: eigene Nummer, Chats (nur gefilterte Texte, max. 30 Chats x 50 Nachrichten), Anrufverlauf (max. 30)
+			Number = "", Chats = {}, Calls = {},
+			Settings = { SoundVolume = 0.8, MusicVolume = 0.5, Minimap = true, MinimapZoom = 2, UIScale = 1, Particles = true, ShowHints = true, Wallpaper = 1, Traffic = true },
 		},
 		-- Schema 4 (Prompt 08): geladene Munition je Waffe, Kleidung (gekauft, aktuell getragen, gespeicherte Outfits)
 		Weapons = { Loaded = {} }, -- [itemId] = Schuss im Magazin
@@ -76,6 +78,8 @@ local function defaults()
 		Leisure = { Fitness = 0, Bowling = 0, Arcade = 0, Hoops = 0 },
 		-- Prompt 11: Beruf, Karriere (XP), Statistik je Beruf { Tasks, Earned }, Gesamtverdienst aus Arbeit
 		Work = { Job = "", XP = 0, Stats = {}, Earned = 0 },
+		-- Prompt 13: LOTT E-Scooter (letzte Fahrten, Gesamtkosten, Anzahl Fahrten)
+		Lott = { History = {}, Total = 0, Rides = 0 },
 		Meta = { FirstJoin = os.time(), LastJoin = 0, LastSave = 0, RecentTx = {}, Session = nil },
 	}
 end

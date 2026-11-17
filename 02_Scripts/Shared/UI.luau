@@ -162,6 +162,27 @@ function UI.window(screen, title, size, onClose)
 	corner(win, 14)
 	stroke(win, T.Stroke)
 	UI.new("UISizeConstraint", { MaxSize = Vector2.new(math.huge, math.huge), MinSize = Vector2.new(300, 200), Parent = win })
+	-- Prompt 12: auf kleinen Bildschirmen (Laptop, Tablet, Handy) automatisch passend verkleinern
+	local fit = UI.new("UIScale", { Name = "FitScale", Parent = win })
+	local function refit()
+		local cam = workspace.CurrentCamera
+		local vp = cam and cam.ViewportSize or Vector2.new(1920, 1080)
+		local w = (size and size.X.Offset > 0) and size.X.Offset or 520
+		local h = (size and size.Y.Offset > 0) and size.Y.Offset or 560
+		fit.Scale = math.clamp(math.min((vp.X - 24) / w, (vp.Y - 24) / h), 0.55, 1)
+	end
+	refit()
+	local cam = workspace.CurrentCamera
+	if cam then
+		local conn
+		conn = cam:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+			if not win.Parent then
+				conn:Disconnect()
+				return
+			end
+			refit()
+		end)
+	end
 	local header = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 56), Parent = win })
 	pad(header, 16)
 	UI.new("TextLabel", {
@@ -204,7 +225,9 @@ local toastHolder
 function UI.toast(text, kind)
 	if not toastHolder or not toastHolder.Parent then
 		local scr = UI.screen("MiamiToasts", 100)
-		toastHolder = UI.new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 20), Size = UDim2.new(0, 420, 1, -40), BackgroundTransparency = 1, Parent = scr })
+		-- Prompt 12: Breite passt sich schmalen Bildschirmen an
+		toastHolder = UI.new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 20), Size = UDim2.new(0.9, 0, 1, -40), BackgroundTransparency = 1, Parent = scr })
+		UI.new("UISizeConstraint", { MaxSize = Vector2.new(420, math.huge), Parent = toastHolder })
 		UI.list(toastHolder, 8)
 	end
 	local color = (kind == "error" and T.Danger) or (kind == "success" and T.Success) or (kind == "warning" and T.Warning) or T.Accent

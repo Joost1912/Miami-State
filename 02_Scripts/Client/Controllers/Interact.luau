@@ -184,11 +184,11 @@ function X.Open(ctx, targetId)
 	local officer = info.IsOfficer
 	local responder = info.Responder
 	local tall = officer or responder
-	local _, content = UI.window(screen, "Interaktion", UDim2.fromOffset(tall and 560 or 420, officer and 640 or (responder and 520 or 420)), function()
+	local _, content = UI.window(screen, "Interaktion", UDim2.fromOffset(tall and 560 or 460, officer and 640 or (responder and 560 or 500)), function()
 		X.Close()
 		ctx.Closed("Interact")
 	end)
-	local body = tall and UI.scroll(content) or content
+	local body = UI.scroll(content) -- Prompt 12: immer scrollbar (kleine Bildschirme)
 	UI.list(body, 8)
 	UI.label(body, info.Name, 24, { Font = T.FontBlack })
 	local f = ctx.Config.Factions[info.FactionId]
@@ -201,26 +201,83 @@ function X.Open(ctx, targetId)
 			X.Open(ctx, targetId)
 		end)
 	end
-	UI.label(body, "BARGELD UEBERGEBEN", 12, { TextColor3 = T.Muted, Font = T.FontBold })
+	-- Prompt 12: kontextabhaengige Spieleraktionen (nur bei echten Spielern; Testpersonen nur Polizei/EMS)
+	local function grid(cols)
+		local g = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, -6, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, Parent = body })
+		UI.new("UIGridLayout", { CellSize = UDim2.new(1 / cols, -6, 0, 34), CellPadding = UDim2.fromOffset(6, 6), Parent = g })
+		return g
+	end
+	local function act(parent, label, style, fn)
+		local b = UI.button(parent, label, style or "secondary", { TextSize = 12 })
+		b.MouseButton1Click:Connect(fn)
+		return b
+	end
+	if info.CanAddContact then
+		UI.label(body, "BEGEGNUNG", 12, { TextColor3 = T.Muted, Font = T.FontBold })
+		local g1 = grid(2)
+		act(g1, "👋  Begruessen", nil, function()
+			ctx.Request("Social.Gesture", { Target = info.UserId, Kind = "Wave" })
+		end)
+		act(g1, "💬  Ansprechen", nil, function()
+			ctx.Request("Social.Gesture", { Target = info.UserId, Kind = "Talk" })
+		end)
+		act(g1, "🤝  Hand schuetteln", nil, function()
+			ctx.Request("Social.Request", { Target = info.UserId, Kind = "Handshake" })
+		end)
+		act(g1, "🙋  Um Hilfe bitten", nil, function()
+			ctx.Request("Social.Gesture", { Target = info.UserId, Kind = "Help" })
+		end)
+		UI.label(body, "KONTAKT", 12, { TextColor3 = T.Muted, Font = T.FontBold })
+		local g2 = grid(2)
+		act(g2, "📇  Kontaktdaten tauschen", nil, function()
+			ctx.Request("Social.Request", { Target = info.UserId, Kind = "Contacts" })
+		end)
+		act(g2, "📞  Anrufen", nil, function()
+			ctx.Request("Comms.Call", { To = info.UserId })
+		end)
+		act(g2, "✉  Nachricht schreiben", nil, function()
+			X.Close()
+			ctx.Closed("Interact")
+			ctx.Open("Phone")
+			task.delay(0.4, function()
+				local pc = ctx.Controllers.PhoneComms
+				if pc and pc.OpenChat then
+					pc.OpenChat(info.UserId)
+				end
+			end)
+		end)
+		if ctx.Profile and #ctx.Profile.Properties.Owned > 0 then
+			act(g2, "🏠  In Wohnung einladen", nil, function()
+				X.Close()
+				ctx.Closed("Interact")
+				ctx.Open("Property", { Manage = true, Target = info.UserId })
+			end)
+		end
+	end
+	UI.label(body, "BARGELD", 12, { TextColor3 = T.Muted, Font = T.FontBold })
 	local amount = UI.input(body, "Betrag in $")
-	local row = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 40), Parent = body })
+	local row = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, -6, 0, 40), Parent = body })
 	UI.list(row, 8, true)
-	local give = UI.button(row, "GELD GEBEN", "primary", { Size = UDim2.new(0.5, -4, 1, 0) })
-	give.MouseButton1Click:Connect(function()
+	local function amountValue()
 		local n = tonumber(amount.Text)
 		if not n or n <= 0 or n % 1 ~= 0 then
 			UI.toast("Bitte einen ganzen Betrag eingeben", "error")
-			return
+			return nil
 		end
-		if ctx.Request("Cash.Give", { Target = info.UserId, Amount = n, TxId = ctx.TxId() }).ok then
+		return n
+	end
+	local give = UI.button(row, "GELD GEBEN", "primary", { Size = UDim2.new(0.5, -4, 1, 0) })
+	give.MouseButton1Click:Connect(function()
+		local n = amountValue()
+		if n and ctx.Request("Cash.Give", { Target = info.UserId, Amount = n, TxId = ctx.TxId() }).ok then
 			amount.Text = ""
 		end
 	end)
 	if info.CanAddContact then
-		local add = UI.button(row, "ALS KONTAKT SPEICHERN", "secondary", { Size = UDim2.new(0.5, -4, 1, 0), TextSize = 13 })
-		add.MouseButton1Click:Connect(function()
-			if ctx.Request("Phone.AddContact", { UserId = info.UserId }).ok then
-				add.Visible = false
+		UI.button(row, "GELD ANFORDERN", "secondary", { Size = UDim2.new(0.5, -4, 1, 0), TextSize = 13 }).MouseButton1Click:Connect(function()
+			local n = amountValue()
+			if n then
+				ctx.Request("Social.Request", { Target = info.UserId, Kind = "Money", Amount = n })
 			end
 		end)
 	end
@@ -229,6 +286,36 @@ function X.Open(ctx, targetId)
 			X.Open(ctx, targetId)
 		end)
 	end
+end
+
+-- Prompt 12: Anfrage eines anderen Spielers (Hand schuetteln, Geld, Kontakte) - annehmen/ablehnen
+function X.Request(ctx, data)
+	local UI, T = ctx.UI, ctx.UI.Theme
+	local scr = UI.screen("MiamiSocialRequest_" .. string.sub(data.Id, 1, 6), 40)
+	local f = UI.new("Frame", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -70, 0, 300), Size = UDim2.fromOffset(300, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = T.Panel, BackgroundTransparency = 0.05, Parent = scr })
+	UI.corner(f, 12)
+	UI.stroke(f, T.Accent, 1, 0.5)
+	UI.pad(f, 12)
+	UI.list(f, 8)
+	UI.label(f, data.Kind == "Money" and "GELDANFRAGE" or "ANFRAGE", 11, { Font = T.FontBold, TextColor3 = T.Accent })
+	UI.label(f, data.Text, 14, { AutomaticSize = Enum.AutomaticSize.Y })
+	local row = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 32), Parent = f })
+	UI.list(row, 6, true)
+	local function answer(ok)
+		scr:Destroy()
+		ctx.Request("Social.Respond", { Id = data.Id, Accept = ok })
+	end
+	UI.button(row, data.Kind == "Money" and "Bezahlen" or "Annehmen", "primary", { Size = UDim2.new(0.5, -3, 1, 0), TextSize = 12 }).MouseButton1Click:Connect(function()
+		answer(true)
+	end)
+	UI.button(row, "Ablehnen", "secondary", { Size = UDim2.new(0.5, -3, 1, 0), TextSize = 12 }).MouseButton1Click:Connect(function()
+		answer(false)
+	end)
+	task.delay(40, function()
+		if scr.Parent then
+			scr:Destroy()
+		end
+	end)
 end
 
 -- Durchsuchungsergebnis mit Beschlagnahme

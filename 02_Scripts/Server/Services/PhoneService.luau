@@ -17,6 +17,7 @@ local SETTINGS = {
 	MinimapZoom = { "number", 1, 4, true },
 	UIScale = { "number", 0.8, 1.25 },
 	Particles = { "boolean" },
+	Traffic = { "boolean" }, -- Prompt 12: NPC-Verkehr und Passanten (clientseitig)
 	ShowHints = { "boolean" },
 	Wallpaper = { "number", 1, 4, true },
 }
@@ -73,7 +74,7 @@ function PhoneService.AddContact(player, userId)
 		if #d.Phone.Contacts >= MAX_CONTACTS then
 			return false, "Maximal " .. MAX_CONTACTS .. " Kontakte"
 		end
-		table.insert(d.Phone.Contacts, { UserId = userId, Name = name, Added = os.time() })
+		table.insert(d.Phone.Contacts, { UserId = userId, Name = name, Added = os.time(), Number = target:GetAttribute("PhoneNumber") }) -- Prompt 12: Nummer
 	end)
 	return ok, ok and (name .. " gespeichert") or err
 end

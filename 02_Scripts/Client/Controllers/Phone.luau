@@ -78,6 +78,8 @@ end
 
 -- Apps ----------------------------------------------------------------------------------------------------
 local Apps = {}
+-- Prompt 12: Bausteine fuer ausgelagerte Apps (PhoneComms: Nachrichten, Telefon)
+Phone.Helpers = { appHeader = appHeader, card = card, small = small }
 Phone.Apps = Apps
 
 local function comingSoon(name, text)
@@ -446,6 +448,7 @@ table.insert(Apps, { Id = "Settings", Name = "Einstellungen", Icon = "⚙", Colo
 	toggle("Minimap anzeigen", "Minimap")
 	toggle("Partikel (Feuer, Rauch, Spray)", "Particles")
 	toggle("Steuerungshinweise", "ShowHints")
+	toggle("NPC-Verkehr & Passanten", "Traffic") -- Prompt 12
 	-- UI-Groesse und Minimap-Zoom
 	local f = card(c, 44)
 	UI.new("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(0.5, 0, 1, 0), Font = T().FontBold, TextSize = 13, TextColor3 = T().Text, TextXAlignment = Enum.TextXAlignment.Left, Text = "Oberflaeche", Parent = f })
@@ -529,6 +532,12 @@ function Phone.Home()
 		local cell = UI.new("Frame", { BackgroundTransparency = 1, Parent = grid })
 		local icon = UI.new("TextButton", { AutoButtonColor = true, AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.fromOffset(54, 54), BackgroundColor3 = app.Color, Text = app.Icon, TextSize = 28, Font = T().FontBold, TextColor3 = Color3.new(1, 1, 1), Parent = cell })
 		UI.corner(icon, 16)
+		-- Prompt 12: Zaehler (ungelesene Nachrichten, verpasste Anrufe)
+		local count = app.Badge and app.Badge() or 0
+		if count > 0 then
+			local badge = UI.new("TextLabel", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(1, -4, 0, 4), Size = UDim2.fromOffset(20, 20), BackgroundColor3 = Color3.fromRGB(255, 70, 80), Font = T().FontBlack, TextSize = 11, TextColor3 = Color3.new(1, 1, 1), Text = count > 9 and "9+" or tostring(count), ZIndex = 3, Parent = icon })
+			UI.corner(badge, 10)
+		end
 		UI.new("TextLabel", { BackgroundTransparency = 1, Position = UDim2.fromOffset(-6, 60), Size = UDim2.new(1, 12, 0, 16), Font = T().FontBold, TextSize = 11, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0.6, Text = app.Name, Parent = cell })
 		icon.MouseButton1Click:Connect(function()
 			app.Open(ctxRef)

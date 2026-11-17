@@ -14,19 +14,23 @@ V.FuelPerStud = 0.0035 -- Prozent Verbrauch pro gefahrenem Stud (Faktor je Model
 V.Dealers = {
 	Standard = { Name = "Sawgrass Motors", Subtitle = "Alltagsfahrzeuge, SUVs und Pickups - Sawgrass Park", Color = rgb(64, 200, 255) },
 	Luxury = { Name = "Bayfront Prestige", Subtitle = "Sportwagen, Luxuslimousinen und Supersportwagen - Downtown", Color = rgb(220, 180, 90) },
+	-- Prompt 12: Flagship-Showroom auf dem Sawgrass-Motors-Gelaende, komplettes Sortiment beider Haendler
+	Gallery = { Name = "Miami Motor Gallery", Subtitle = "Alle Klassen: Alltag, SUV, Pickup, Muscle, Luxus, Sport, Supersport", Color = rgb(64, 224, 255) },
 }
 
 -- Katalog (Reihenfolge = Anzeige). Class nur zur Anzeige.
+-- Drive = Antrieb (Anzeige); Werte fuer Beschleunigung/Handling berechnet der Server aus der Vorlage (Torque/Mass/MaxSteer)
 V.Models = {
-	{ Id = "Compact", Name = "Volta C1", Class = "Kleinwagen", Dealer = "Standard", Price = 9500, Thirst = 0.7, Desc = "Sparsamer Stadtflitzer fuer den Alltag." },
-	{ Id = "Sedan", Name = "Meridian Sedan", Class = "Limousine", Dealer = "Standard", Price = 18500, Thirst = 1.0, Desc = "Solide Mittelklasse-Limousine mit Platz fuer vier." },
-	{ Id = "SUV", Name = "Everglade SUV", Class = "SUV", Dealer = "Standard", Price = 32000, Thirst = 1.3, Desc = "Gelaendegaengiger Familien-SUV." },
-	{ Id = "Pickup", Name = "Gulf Hauler", Class = "Pickup", Dealer = "Standard", Price = 29500, Thirst = 1.4, Desc = "Robuster Pickup mit grosser Ladeflaeche." },
-	{ Id = "LuxurySedan", Name = "Aurelia S", Class = "Luxuslimousine", Dealer = "Luxury", Price = 78000, Thirst = 1.1, Desc = "Chrom, Leder, Stille - die Chefetage auf Raedern." },
-	{ Id = "LuxurySUV", Name = "Regent X", Class = "Luxus-SUV", Dealer = "Luxury", Price = 96000, Thirst = 1.4, Desc = "Grosser Premium-SUV mit Dachreling und Chrompaket." },
-	{ Id = "Sports", Name = "Vento GT", Class = "Sportwagen", Dealer = "Luxury", Price = 125000, Thirst = 1.5, Desc = "Leichtes Coupe mit Heckspoiler." },
-	{ Id = "Convertible", Name = "Riviera Spyder", Class = "Cabrio", Dealer = "Luxury", Price = 148000, Thirst = 1.4, Desc = "Offenes Cabrio fuer den Ocean Drive." },
-	{ Id = "Supercar", Name = "Apex R", Class = "Supersportwagen", Dealer = "Luxury", Price = 285000, Thirst = 2.0, Desc = "Flach, breit, schnell - das Topmodell." },
+	{ Id = "Compact", Name = "Volta C1", Class = "Alltagsfahrzeug", Dealer = "Standard", Price = 9500, Thirst = 0.7, Drive = "Frontantrieb", Desc = "Sparsamer Stadtflitzer fuer den Alltag." },
+	{ Id = "Sedan", Name = "Meridian Sedan", Class = "Alltagsfahrzeug", Dealer = "Standard", Price = 18500, Thirst = 1.0, Drive = "Frontantrieb", Desc = "Solide Mittelklasse-Limousine mit Platz fuer vier." },
+	{ Id = "SUV", Name = "Everglade SUV", Class = "SUV", Dealer = "Standard", Price = 32000, Thirst = 1.3, Drive = "Allrad", Desc = "Gelaendegaengiger Familien-SUV." },
+	{ Id = "Pickup", Name = "Gulf Hauler", Class = "Pickup", Dealer = "Standard", Price = 29500, Thirst = 1.4, Drive = "Allrad", Desc = "Robuster Pickup mit grosser Ladeflaeche." },
+	{ Id = "Muscle", Name = "Bayou Thunder", Class = "Muscle Car", Dealer = "Standard", Price = 64000, Thirst = 1.8, Drive = "Heckantrieb", Desc = "V8-Klassiker mit Rennstreifen und Hutzen - laut und stolz." },
+	{ Id = "LuxurySedan", Name = "Aurelia S", Class = "Luxuslimousine", Dealer = "Luxury", Price = 78000, Thirst = 1.1, Drive = "Heckantrieb", Desc = "Chrom, Leder, Stille - die Chefetage auf Raedern." },
+	{ Id = "LuxurySUV", Name = "Regent X", Class = "SUV", Dealer = "Luxury", Price = 96000, Thirst = 1.4, Drive = "Allrad", Desc = "Grosser Premium-SUV mit Dachreling und Chrompaket." },
+	{ Id = "Sports", Name = "Vento GT", Class = "Sportwagen", Dealer = "Luxury", Price = 125000, Thirst = 1.5, Drive = "Heckantrieb", Desc = "Leichtes Coupe mit Heckspoiler." },
+	{ Id = "Convertible", Name = "Riviera Spyder", Class = "Sportwagen", Dealer = "Luxury", Price = 148000, Thirst = 1.4, Drive = "Heckantrieb", Desc = "Offenes Cabrio fuer den Ocean Drive." },
+	{ Id = "Supercar", Name = "Apex R", Class = "Supersportwagen", Dealer = "Luxury", Price = 285000, Thirst = 2.0, Drive = "Allrad", Desc = "Flach, breit, schnell - das Topmodell." },
 }
 V.ById = {}
 for _, m in ipairs(V.Models) do

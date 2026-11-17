@@ -111,6 +111,7 @@ Items.Defs = {
 	Laptop = { Name = "Laptop", Category = "Tools", Stack = 1, Desc = "Fuer Arbeit und Spiel." },
 	Sunglasses = { Name = "Sonnenbrille", Category = "Misc", Stack = 2, Desc = "Polarisiert." },
 	Surfboard = { Name = "Surfbrett", Category = "Leisure", Stack = 1, Desc = "Fuer die Wellen an Coral Key." },
+	HotDog = { Name = "Hot Dog", Category = "Food", Stack = 5, Use = "Meal", Amount = 4, Desc = "Mit Senf und Roestzwiebeln." }, -- Prompt 12
 }
 
 Items.MaxSlots = 24

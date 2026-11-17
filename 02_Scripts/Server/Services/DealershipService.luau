@@ -25,7 +25,9 @@ end
 local function nearDealer(player, dealerId)
 	for _, inst in ipairs(CollectionService:GetTagged("Interactable")) do
 		local t = inst:GetAttribute("InteractType")
-		if t == "Dealer" and (dealerId == nil or inst:GetAttribute("DealerId") == dealerId) and S.InteractionService.Near(player, inst, DEALER_RANGE) then
+		-- Prompt 12: "Gallery" (Miami Motor Gallery) fuehrt das komplette Sortiment beider Haendler
+		local id = inst:GetAttribute("DealerId")
+		if t == "Dealer" and (dealerId == nil or id == dealerId or id == "Gallery") and S.InteractionService.Near(player, inst, DEALER_RANGE) then
 			return inst
 		end
 	end
@@ -47,7 +49,11 @@ local function specOf(modelId)
 			seats += 1
 		end
 	end
-	return { TopSpeed = math.floor((t:GetAttribute("MaxSpeed") or 90) * 0.28 * 3.6), Power = t:GetAttribute("Torque") or 0, Seats = seats }
+	-- Prompt 12: Beschleunigung (0-100 km/h, Schaetzung aus Drehmoment/Masse) und Handling (Lenkung + Bremse, 0-10)
+	local torque, mass = t:GetAttribute("Torque") or 2000, t:GetAttribute("Mass") or 140
+	local accel = math.clamp(math.floor(1300 / (torque / mass)) / 10, 3, 16)
+	local handling = math.clamp(math.floor(((t:GetAttribute("MaxSteer") or 30) / 35 * 6 + (t:GetAttribute("BrakeTorque") or 5000) / 8000 * 4) * 10) / 10, 1, 10)
+	return { TopSpeed = math.floor((t:GetAttribute("MaxSpeed") or 90) * 0.28 * 3.6), Power = torque, Seats = seats, Accel = accel, Handling = handling }
 end
 
 local function validTx(player, txId)
@@ -65,10 +71,10 @@ function D.Catalog(player, dealerId)
 	local d = S.DataService.Get(player)
 	local list = {}
 	for _, m in ipairs(Cfg.Models) do
-		if m.Dealer == dealerId then
+		if m.Dealer == dealerId or dealerId == "Gallery" then
 			local spec = specOf(m.Id)
 			if spec then
-				table.insert(list, { Id = m.Id, Name = m.Name, Class = m.Class, Price = m.Price, Desc = m.Desc, TopSpeed = spec.TopSpeed, Power = spec.Power, Seats = spec.Seats, Thirst = m.Thirst })
+				table.insert(list, { Id = m.Id, Name = m.Name, Class = m.Class, Price = m.Price, Desc = m.Desc, TopSpeed = spec.TopSpeed, Power = spec.Power, Seats = spec.Seats, Thirst = m.Thirst, Accel = spec.Accel, Handling = spec.Handling, Drive = m.Drive or "-" })
 			end
 		end
 	end
@@ -76,7 +82,7 @@ function D.Catalog(player, dealerId)
 	for i, p in ipairs(Cfg.Paints) do
 		paints[i] = { Name = p.Name, R = math.floor(p.C.R * 255), G = math.floor(p.C.G * 255), B = math.floor(p.C.B * 255) }
 	end
-	return true, nil, { Dealer = dealerId, Title = Cfg.Dealers[dealerId].Name, Subtitle = Cfg.Dealers[dealerId].Subtitle, Models = list, Paints = paints, Owned = #d.Vehicles.Owned, MaxOwned = Cfg.MaxOwned, Bank = d.Money.Bank, TestDrive = Cfg.TestDriveSeconds }
+	return true, nil, { Dealer = dealerId, Title = Cfg.Dealers[dealerId].Name, Subtitle = Cfg.Dealers[dealerId].Subtitle, Models = list, Paints = paints, Owned = #d.Vehicles.Owned, MaxOwned = Cfg.MaxOwned, Bank = d.Money.Bank, Cash = d.Money.Cash, TestDrive = Cfg.TestDriveSeconds }
 end
 
 function D.Buy(player, p)
@@ -98,19 +104,24 @@ function D.Buy(player, p)
 	if #d.Vehicles.Owned >= Cfg.MaxOwned then
 		return false, "Maximal " .. Cfg.MaxOwned .. " Fahrzeuge - verkaufe zuerst eines"
 	end
+	-- Prompt 12: Zahlart waehlbar (Bargeld oder Bankkonto); Pruefung vor dem Verbrauch der Transaktions-ID
+	local account = p.Method == "Cash" and "Cash" or "Bank"
+	if d.Money[account] < m.Price then
+		return false, (account == "Cash" and "Nicht genug Bargeld" or "Kontostand nicht ausreichend") .. " (" .. S.Format.money(m.Price) .. ")"
+	end
 	if not validTx(player, p.TxId) then
 		return false, "Vorgang bereits ausgefuehrt"
 	end
-	if d.Money.Bank < m.Price then
-		return false, "Kontostand nicht ausreichend (" .. S.Format.money(m.Price) .. ")"
-	end
-	local ok, err = S.EconomyService.Charge(player, "Bank", m.Price, "Fahrzeugkauf " .. m.Name)
+	local ok, err = S.EconomyService.Charge(player, account, m.Price, "Fahrzeugkauf " .. m.Name)
 	if not ok then
 		return false, err
 	end
 	local plate = S.VehicleService.NewPlate()
 	local c = paint.C
-	S.DataService.Mutate(player, "VehicleBuy", function(data)
+	local added, addErr = S.DataService.Mutate(player, "VehicleBuy", function(data)
+		if #data.Vehicles.Owned >= Cfg.MaxOwned then
+			return false, "Maximal " .. Cfg.MaxOwned .. " Fahrzeuge"
+		end
 		local maxId = 0
 		for _, v in ipairs(data.Vehicles.Owned) do
 			maxId = math.max(maxId, v.Id)
@@ -120,11 +131,16 @@ function D.Buy(player, p)
 			Paint = table.find(Cfg.Paints, paint), Price = m.Price, Bought = os.time(), Fuel = 100, Tuning = {},
 		})
 	end)
+	if not added then
+		-- Fahrzeug konnte nicht eingetragen werden: Kaufpreis erstatten (kein Geldverlust)
+		S.EconomyService.Credit(player, account, m.Price, "Erstattung Fahrzeugkauf " .. m.Name)
+		return false, addErr or "Kauf fehlgeschlagen - Betrag erstattet"
+	end
 	S.Log("Vehicle", player, nil, string.format("Kauf %s (%s) fuer $%d", m.Name, plate, m.Price))
 	if S.BusinessService then
 		S.BusinessService.OnDealer(m.Dealer, m.Price) -- Prompt 11: Provision des Autohaus-Inhabers
 	end
-	return true, string.format("Glueckwunsch! %s gekauft - Kennzeichen %s. Abholung ueber Garage oder Handy.", m.Name, plate), { Plate = plate }
+	return true, string.format("Glueckwunsch! %s gekauft - Kennzeichen %s. Abholung ueber Garage oder Handy.", m.Name, plate), { Plate = plate, Name = m.Name, Price = m.Price, Method = account }
 end
 
 function D.Sell(player, id)
@@ -197,9 +213,16 @@ function D.TestDrive(player, modelId)
 		return false, "Du machst bereits eine Probefahrt"
 	end
 	local pad
+	-- naechster Probefahrt-Stellplatz zum Haendler, an dem der Spieler steht (Prompt 12: auch Gallery)
+	local dRoot = S.InteractionService.RootOf(dealer)
+	local bestD
 	for _, p in ipairs(CollectionService:GetTagged("TestDrivePad")) do
-		if p:GetAttribute("DealerId") == m.Dealer and p:IsDescendantOf(workspace) then
-			pad = p
+		local id = p:GetAttribute("DealerId")
+		if (id == m.Dealer or id == "Gallery") and p:IsDescendantOf(workspace) then
+			local dist = dRoot and (p.Position - dRoot.Position).Magnitude or 0
+			if not bestD or dist < bestD then
+				pad, bestD = p, dist
+			end
 		end
 	end
 	if not pad then

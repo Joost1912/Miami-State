@@ -197,6 +197,11 @@ Shops.Catalogs = {
 		Title = "Optiker", Kind = "Clothing", Icon = "👓", Color = rgb(120, 160, 230),
 		Items = { { Id = "Glasses_Clear", Price = 40 }, { Id = "Shades_Black", Price = 45 }, { Id = "Shades_Gold", Price = 150 } },
 	},
+	-- Prompt 12: Strassenimbisse in Downtown
+	StreetFood = {
+		Title = "Strassenimbiss", Subtitle = "Hot Dogs, Tacos, Limonade", Kind = "Restaurant", Icon = "🌭", Color = rgb(255, 180, 60),
+		Items = { { Id = "HotDog", Price = 5 }, { Id = "Tacos", Price = 7 }, { Id = "Lemonade", Price = 3 }, { Id = "Soda", Price = 2 } },
+	},
 	Market = {
 		Title = "Corner Market", Subtitle = "Kleiner Supermarkt", Kind = "Retail", Icon = "🛒", Color = rgb(90, 180, 110),
 		Items = { { Id = "WaterBottle", Price = 2 }, { Id = "Soda", Price = 2 }, { Id = "Sandwich", Price = 6 }, { Id = "Chips", Price = 3 }, { Id = "Fruit", Price = 3 }, { Id = "Batteries", Price = 6 } },

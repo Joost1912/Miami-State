@@ -50,7 +50,7 @@ end
 -- Services laden
 local S = { Push = push, Log = log, Format = require(Shared.Format), Remotes = { Request = Request, Push = PushRemote, VehicleControl = VehicleControl, FireSpray = FireSpray } }
 -- Prompt 10: DealershipService (Autohaus/Garage/Tuning), PropertyService (Apartments), ActivityService (Downtown)
-for _, name in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService" }) do
+for _, name in ipairs({ "DataService", "EconomyService", "InventoryService", "JobService", "PayrollService", "CharacterService", "InteractionService", "ShopService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService", "CommsService", "SocialService", "LottService", "GateService" }) do
 	S[name] = require(ServicesFolder:WaitForChild(name))
 end
 S.DataService.SetPushRemote(PushRemote)
@@ -623,7 +623,7 @@ end
 
 -- Start
 S.DataService.Start()
-for _, name in ipairs({ "JobService", "PayrollService", "CharacterService", "InteractionService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService" }) do
+for _, name in ipairs({ "JobService", "PayrollService", "CharacterService", "InteractionService", "VehicleService", "UniformService", "PoliceService", "RescueService", "RadioService", "DispatchService", "JusticeService", "FireService", "MedicalService", "PhoneService", "WeaponService", "ClothingService", "WantedService", "CrimeService", "DealershipService", "PropertyService", "ActivityService", "WorkService", "BusinessService", "CommsService", "SocialService", "LottService", "GateService" }) do
 	S[name].Start()
 end
 -- Interaktionspunkte der Polizeiwache
@@ -895,6 +895,37 @@ if game:GetService("RunService"):IsStudio() then
 			table.insert(out, e.Kind .. " | " .. e.Actor .. " -> " .. e.Target .. " | " .. e.Details)
 		end
 		return table.concat(out, "\n")
+	end
+	-- Prompt 13: LOTT testen (Miete als erster Spieler, Zeitsprung fuer die Minutenabrechnung, Doppelmiete durch Testperson)
+	function C.Lott(op, id, arg)
+		local p = Players:GetPlayers()[1]
+		local L = S.LottService
+		local HS = game:GetService("HttpService")
+		if op == "Goto" then
+			local m = workspace.LottScooters[id]
+			p:RequestStreamAroundAsync(m.Chassis.Position)
+			p.Character:PivotTo(m.Chassis.CFrame * CFrame.new(3, 3, 0))
+			return "ok"
+		elseif op == "Rent" then
+			return HS:JSONEncode({ L.Rent(p, id, arg or "Bank") })
+		elseif op == "End" then
+			return HS:JSONEncode({ L.End(p) })
+		elseif op == "List" then
+			local _, _, data = L.List(p)
+			return HS:JSONEncode(data)
+		elseif op == "Shift" then
+			-- Mietbeginn um arg Sekunden vorverlegen (simuliert vergangene Fahrzeit)
+			local r = L._rentals[p]
+			if r then
+				r.Start -= arg
+			end
+			return r and (r.Start .. "") or "keine Miete"
+		elseif op == "Other" then
+			-- zweite Person versucht denselben Roller zu mieten
+			local other = { UserId = -3001, Name = "TestZwei", Character = p.Character, GetAttribute = function() end, SetAttribute = function() end }
+			return HS:JSONEncode({ L.Rent(other, id, "Bank") })
+		end
+		return "?"
 	end
 	dbg.OnInvoke = function(cmd, ...)
 		return C[cmd] and C[cmd](...) or "unbekannter Befehl"

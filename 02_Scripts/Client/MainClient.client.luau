@@ -32,6 +32,7 @@ local ctx = {
 		Vehicles = require(Shared.Config.Vehicles),
 		Properties = require(Shared.Config.Properties),
 		Work = require(Shared.Config.Work), -- Prompt 11
+		Lott = require(Shared.Config.Lott), -- Prompt 13
 		-- generierte Kartendaten (Schritt 22_MapExport); fehlen sie, laufen Karte/Minimap nicht
 		MapGeo = Shared.Config:FindFirstChild("MapGeo") and require(Shared.Config.MapGeo) or nil,
 	},
@@ -82,6 +83,17 @@ do
 		end
 		for _, g in ipairs(extra.Green or {}) do
 			table.insert(geo.Green, g)
+		end
+		-- Prompt 12: Verdichtung der Parkplaetze (Schritt 28)
+		for _, b in ipairs(extra.Buildings2 or {}) do
+			table.insert(geo.Buildings, b)
+		end
+		for _, g in ipairs(extra.Green2 or {}) do
+			table.insert(geo.Green, g)
+		end
+		-- Prompt 14: verdichtetes Downtown (Schritt 31)
+		for _, b in ipairs(extra.Buildings3 or {}) do
+			table.insert(geo.Buildings, b)
 		end
 		ctx.MapExtraApplied = true
 	end
@@ -200,6 +212,22 @@ Push.OnClientEvent:Connect(function(kind, data)
 		controllers.Work.Done(ctx, data)
 	elseif kind == "Invoice" then
 		controllers.Work.Invoice(ctx, data)
+	-- Prompt 12: Nachrichten, Anrufe, Spieleranfragen
+	elseif kind == "Message" then
+		controllers.PhoneComms.Message(ctx, data)
+	elseif kind == "CallIncoming" then
+		controllers.PhoneComms.Incoming(ctx, data)
+	elseif kind == "CallState" then
+		controllers.PhoneComms.State(ctx, data)
+	elseif kind == "SocialRequest" then
+		controllers.Interact.Request(ctx, data)
+	-- Prompt 13: LOTT E-Scooter
+	elseif kind == "LottOffer" then
+		controllers.Lott.Offer(ctx, data)
+	elseif kind == "LottManage" then
+		controllers.Lott.Manage(ctx, data)
+	elseif kind == "LottState" then
+		controllers.Lott.State(ctx, data)
 	end
 end)
 
@@ -248,6 +276,9 @@ controllers.WeaponHud.Start(ctx)
 task.spawn(controllers.Crime.Start, ctx)
 controllers.Activity.Start(ctx)
 controllers.Work.Start(ctx)
+controllers.PhoneComms.Start(ctx) -- Prompt 12
+task.spawn(controllers.Traffic.Start, ctx) -- Prompt 12: clientseitiger NPC-Verkehr und Passanten
+controllers.Lott.Start(ctx) -- Prompt 13: LOTT-App und Mietanzeige
 
 -- Profil anfordern (falls der erste Push vor dem Laden dieses Skripts kam)
 task.spawn(function()

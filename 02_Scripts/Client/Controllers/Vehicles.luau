@@ -10,6 +10,9 @@ local function money(n)
 end
 
 function V.Close()
+	if V.EndPreview then
+		V.EndPreview()
+	end
 	if closeFn then
 		closeFn()
 	end
@@ -36,7 +39,158 @@ local function statBar(parent, label, value, max, order)
 	TweenService:Create(fill, TweenInfo.new(0.4, Enum.EasingStyle.Quint), { Size = UDim2.fromScale(math.clamp(tonumber(max) and value / max or 0, 0.04, 1), 1) }):Play()
 end
 
--- AUTOHAUS ------------------------------------------------------------------------------------------
+-- AUTOHAUS (Prompt 12: Werte, 360-Grad-Vorschau mit Lack, Zahlart, Bestaetigung, Kaufbeleg) -----------
+local preview -- { Model, Colors = {[part]=Color3}, Conn, Angle }
+local function endPreview()
+	if not preview then
+		return
+	end
+	for part, c in pairs(preview.Colors) do
+		if part.Parent then
+			part.Color = c
+		end
+	end
+	if preview.Conn then
+		preview.Conn:Disconnect()
+	end
+	if preview.Gui then
+		preview.Gui:Destroy()
+	end
+	local cam = workspace.CurrentCamera
+	cam.CameraType = Enum.CameraType.Custom
+	preview = nil
+	if gui then
+		gui.Enabled = true
+	end
+end
+V.EndPreview = endPreview
+
+local function displayFor(modelId)
+	local root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	local best, bd
+	for _, d in ipairs(workspace:GetDescendants()) do
+		if d:IsA("Model") and d.Name == "Display_" .. modelId then
+			local dist = root and (d:GetPivot().Position - root.Position).Magnitude or 0
+			if dist < 400 and (not bd or dist < bd) then
+				best, bd = d, dist
+			end
+		end
+	end
+	return best
+end
+
+local function paintPreview(colorIdx, paints)
+	if not preview then
+		return
+	end
+	local p = paints[colorIdx]
+	local base = preview.Base
+	for part in pairs(preview.Colors) do
+		if part.Parent and preview.Colors[part] == base then
+			part.Color = Color3.fromRGB(p.R, p.G, p.B)
+		end
+	end
+end
+
+local function startPreview(m, paints, getPaint, setPaint)
+	local UI, T = ctxRef.UI, ctxRef.UI.Theme
+	local car = displayFor(m.Id)
+	if not car then
+		UI.toast("Vorschau: Das Modell steht im Showroom der Miami Motor Gallery (Sawgrass Motors)", "warning")
+		return
+	end
+	endPreview()
+	preview = { Model = car, Colors = {}, Angle = 0 }
+	local body = car:FindFirstChild("Body")
+	local lower = body and body:FindFirstChild("LowerBody")
+	preview.Base = lower and lower.Color
+	for _, part in ipairs(body and body:GetChildren() or {}) do
+		if part:IsA("BasePart") then
+			preview.Colors[part] = part.Color
+		end
+	end
+	if gui then
+		gui.Enabled = false
+	end
+	local cam = workspace.CurrentCamera
+	cam.CameraType = Enum.CameraType.Scriptable
+	local _, size = car:GetBoundingBox()
+	local dist = math.max(size.X, size.Z) * 1.25 + 6
+	local center = car:GetPivot().Position
+	local drag = 0
+	preview.Conn = game:GetService("RunService").RenderStepped:Connect(function(dt)
+		preview.Angle += dt * 0.35 + drag
+		drag *= 0.85
+		local a = preview.Angle
+		cam.CFrame = CFrame.lookAt(center + Vector3.new(math.cos(a) * dist, size.Y * 0.6 + 2, math.sin(a) * dist), center + Vector3.new(0, 1, 0))
+	end)
+	-- Vorschau-Leiste
+	local sg = UI.screen("MiamiCarPreview", 25)
+	preview.Gui = sg
+	local bar = UI.new("Frame", { AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -24), Size = UDim2.fromOffset(560, 120), BackgroundColor3 = T.Panel, BackgroundTransparency = 0.08, Parent = sg })
+	UI.corner(bar, 14)
+	UI.pad(bar, 12)
+	UI.new("TextLabel", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 22), Font = T.FontBlack, TextSize = 18, TextColor3 = T.Text, TextXAlignment = Enum.TextXAlignment.Left, Text = m.Name .. "  ·  " .. money(m.Price), Parent = bar })
+	local sw = UI.new("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 30), Size = UDim2.new(1, -150, 0, 50), Parent = bar })
+	UI.new("UIGridLayout", { CellSize = UDim2.fromOffset(22, 22), CellPadding = UDim2.fromOffset(6, 6), Parent = sw })
+	for i, p in ipairs(paints) do
+		local b = UI.new("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = Color3.fromRGB(p.R, p.G, p.B), Parent = sw })
+		UI.corner(b, 11)
+		UI.stroke(b, Color3.new(1, 1, 1), i == getPaint() and 2 or 1, i == getPaint() and 0 or 0.7)
+		b.MouseButton1Click:Connect(function()
+			setPaint(i)
+			paintPreview(i, paints)
+			for _, c in ipairs(sw:GetChildren()) do
+				local s = c:FindFirstChildOfClass("UIStroke")
+				if s then
+					s.Thickness, s.Transparency = 1, 0.7
+				end
+			end
+			local s = b:FindFirstChildOfClass("UIStroke")
+			s.Thickness, s.Transparency = 2, 0
+		end)
+	end
+	local rot = UI.new("Frame", { BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 30), Size = UDim2.fromOffset(140, 32), Parent = bar })
+	UI.list(rot, 6, true)
+	for _, d in ipairs({ { "◀", -0.06 }, { "▶", 0.06 } }) do
+		UI.button(rot, d[1], "secondary", { Size = UDim2.fromOffset(40, 32), TextSize = 14 }).MouseButton1Click:Connect(function()
+			drag += d[2]
+		end)
+	end
+	UI.button(bar, "Zurueck zum Kaufmenue", "primary", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, 0, 1, 0), Size = UDim2.fromOffset(200, 32), TextSize = 13 }).MouseButton1Click:Connect(function()
+		endPreview()
+		V.Render()
+	end)
+	paintPreview(getPaint(), paints)
+end
+
+-- Modales Fenster (Bestaetigung / Kaufbeleg) ueber dem Menue
+local function modal(title, lines, buttons)
+	local UI, T = ctxRef.UI, ctxRef.UI.Theme
+	local cover = UI.new("Frame", { BackgroundColor3 = Color3.new(0, 0, 0), BackgroundTransparency = 0.4, Size = UDim2.fromScale(1, 1), ZIndex = 50, Parent = gui })
+	local box = UI.new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromOffset(380, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundColor3 = T.Panel, ZIndex = 51, Parent = cover })
+	UI.corner(box, 14)
+	UI.stroke(box, T.Accent, 1, 0.5)
+	UI.pad(box, 18)
+	UI.list(box, 8)
+	UI.label(box, string.upper(title), 12, { Font = T.FontBold, TextColor3 = T.Accent, ZIndex = 52 })
+	for _, l in ipairs(lines) do
+		UI.label(box, l[1], l[2] or 14, { Font = l[3] or T.Font, TextColor3 = l[4] or T.Text, ZIndex = 52, AutomaticSize = Enum.AutomaticSize.Y })
+	end
+	local row = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 38), ZIndex = 52, Parent = box })
+	UI.list(row, 8, true)
+	for _, b in ipairs(buttons) do
+		local btn = UI.button(row, b[1], b[2], { Size = UDim2.fromOffset(165, 36), TextSize = 13, ZIndex = 53 })
+		btn.MouseButton1Click:Connect(function()
+			cover:Destroy()
+			if b[3] then
+				b[3]()
+			end
+		end)
+	end
+	return cover
+end
+
 local function renderDealer(body)
 	local UI, T = ctxRef.UI, ctxRef.UI.Theme
 	clear(body)
@@ -46,31 +200,54 @@ local function renderDealer(body)
 		return
 	end
 	local cat = res.data
-	local list = UI.scroll(body, { Size = UDim2.new(0.38, -6, 1, 0) })
+	local list = UI.scroll(body, { Size = UDim2.new(0.36, -6, 1, 0) })
 	UI.list(list, 6)
-	local detail = UI.new("Frame", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Size = UDim2.new(0.62, -6, 1, 0), BackgroundColor3 = T.Panel2, Parent = body })
+	local detail = UI.new("Frame", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Size = UDim2.new(0.64, -6, 1, 0), BackgroundColor3 = T.Panel2, Parent = body })
 	UI.corner(detail, 12)
-	UI.pad(detail, 16)
-	local maxSpeed, maxPower = 1, 1
+	UI.pad(detail, 14)
+	local maxSpeed = 1
 	for _, m in ipairs(cat.Models) do
-		maxSpeed, maxPower = math.max(maxSpeed, m.TopSpeed), math.max(maxPower, m.Power)
+		maxSpeed = math.max(maxSpeed, m.TopSpeed)
 	end
-	local selectedPaint = 1
+	local selectedPaint = state.Paint or 1
+	local method = state.Method or "Bank"
 	local function showModel(m)
 		clear(detail)
-		local col = UI.new("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Parent = detail })
-		UI.list(col, 8)
-		UI.label(col, string.upper(m.Class), 11, { LayoutOrder = 1, Font = T.FontBold, TextColor3 = T.Accent })
-		UI.label(col, m.Name, 26, { LayoutOrder = 2, Font = T.FontBlack })
-		UI.label(col, m.Desc, 13, { LayoutOrder = 3, TextColor3 = T.Muted, Size = UDim2.new(1, 0, 0, 34) })
-		statBar(col, "Hoechstgeschwindigkeit", m.TopSpeed, maxSpeed, 4)
-		statBar(col, "Leistung", m.Power, maxPower, 5)
-		statBar(col, "Verbrauch", m.Thirst, 2, 6)
-		UI.label(col, string.format("%d Sitze  ·  Tank 100%%", m.Seats), 12, { LayoutOrder = 7, TextColor3 = T.Muted })
-		UI.label(col, "LACKIERUNG", 11, { LayoutOrder = 8, Font = T.FontBold, TextColor3 = T.Muted })
-		local sw = UI.new("Frame", { LayoutOrder = 9, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 52), Parent = col })
+		state.Model = m.Id
+		local col = UI.scroll(detail, { Size = UDim2.fromScale(1, 1) })
+		UI.list(col, 7)
+		local o = 0
+		local function nx()
+			o += 1
+			return o
+		end
+		UI.label(col, string.upper(m.Class) .. "  ·  " .. string.upper(m.Drive or "-"), 11, { LayoutOrder = nx(), Font = T.FontBold, TextColor3 = T.Accent })
+		UI.label(col, m.Name, 26, { LayoutOrder = nx(), Font = T.FontBlack })
+		UI.label(col, m.Desc, 13, { LayoutOrder = nx(), TextColor3 = T.Muted, Size = UDim2.new(1, -8, 0, 0), AutomaticSize = Enum.AutomaticSize.Y })
+		statBar(col, "Hoechstgeschwindigkeit  " .. m.TopSpeed .. " km/h", "", nil, nx())
+		local function setBar(order, frac)
+			for _, c in ipairs(col:GetChildren()) do
+				if c:IsA("Frame") and c.LayoutOrder == order then
+					local bg = c:FindFirstChildWhichIsA("Frame")
+					local fill = bg and bg:FindFirstChildWhichIsA("Frame")
+					if fill then
+						TweenService:Create(fill, TweenInfo.new(0.4, Enum.EasingStyle.Quint), { Size = UDim2.fromScale(math.clamp(frac, 0.04, 1), 1) }):Play()
+					end
+				end
+			end
+		end
+		setBar(o, m.TopSpeed / maxSpeed)
+		statBar(col, string.format("Beschleunigung 0-100  %.1f s", m.Accel or 10), "", nil, nx())
+		setBar(o, 1 - ((m.Accel or 10) - 3) / 14)
+		statBar(col, string.format("Handling  %.1f / 10", m.Handling or 5), "", nil, nx())
+		setBar(o, (m.Handling or 5) / 10)
+		statBar(col, string.format("Verbrauch  %.1f", m.Thirst), "", nil, nx())
+		setBar(o, m.Thirst / 2)
+		UI.label(col, string.format("%d Sitze  ·  Antrieb: %s  ·  voller Tank bei Uebergabe", m.Seats, m.Drive or "-"), 12, { LayoutOrder = nx(), TextColor3 = T.Muted })
+		UI.label(col, "LACKIERUNG", 11, { LayoutOrder = nx(), Font = T.FontBold, TextColor3 = T.Muted })
+		local sw = UI.new("Frame", { LayoutOrder = nx(), BackgroundTransparency = 1, Size = UDim2.new(1, -8, 0, 52), Parent = col })
 		UI.new("UIGridLayout", { CellSize = UDim2.fromOffset(22, 22), CellPadding = UDim2.fromOffset(6, 6), Parent = sw })
-		local paintName = UI.label(col, cat.Paints[selectedPaint].Name, 12, { LayoutOrder = 10 })
+		local paintName = UI.label(col, cat.Paints[selectedPaint].Name, 12, { LayoutOrder = nx() })
 		local strokes = {}
 		for i, p in ipairs(cat.Paints) do
 			local b = UI.new("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = Color3.fromRGB(p.R, p.G, p.B), Parent = sw })
@@ -79,40 +256,80 @@ local function renderDealer(body)
 			b.MouseButton1Click:Connect(function()
 				strokes[selectedPaint].Transparency = 1
 				selectedPaint = i
+				state.Paint = i
 				strokes[i].Transparency = 0
 				paintName.Text = p.Name
 			end)
 		end
-		local row = UI.new("Frame", { LayoutOrder = 11, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44), Parent = col })
-		local test = UI.button(row, "Probefahrt (" .. cat.TestDrive .. " s)", "secondary", { Size = UDim2.new(0.42, -4, 1, 0), TextSize = 13 })
-		local buy = UI.button(row, "Kaufen  " .. money(m.Price), "primary", { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, 0, 0, 0), Size = UDim2.new(0.58, -4, 1, 0), TextSize = 14 })
-		UI.label(col, string.format("Bankkonto: %s  ·  Fahrzeuge %d/%d", money(cat.Bank), cat.Owned, cat.MaxOwned), 11, { LayoutOrder = 12, TextColor3 = T.Muted })
-		test.MouseButton1Click:Connect(function()
+		-- Zahlart
+		UI.label(col, "ZAHLUNG", 11, { LayoutOrder = nx(), Font = T.FontBold, TextColor3 = T.Muted })
+		local pay = UI.new("Frame", { LayoutOrder = nx(), BackgroundTransparency = 1, Size = UDim2.new(1, -8, 0, 34), Parent = col })
+		UI.list(pay, 6, true)
+		local payBtns = {}
+		for _, pm in ipairs({ { "Bank", "Bankkonto  " .. money(cat.Bank) }, { "Cash", "Bargeld  " .. money(cat.Cash or 0) } }) do
+			local b = UI.button(pay, pm[2], pm[1] == method and "primary" or "secondary", { Size = UDim2.new(0.5, -3, 1, 0), TextSize = 12 })
+			payBtns[pm[1]] = b
+			b.MouseButton1Click:Connect(function()
+				method = pm[1]
+				state.Method = method
+				for k, x in pairs(payBtns) do
+					x.BackgroundColor3 = k == method and T.Accent or T.Panel2
+					x.TextColor3 = k == method and T.Bg or T.Text
+				end
+			end)
+		end
+		local row = UI.new("Frame", { LayoutOrder = nx(), BackgroundTransparency = 1, Size = UDim2.new(1, -8, 0, 40), Parent = col })
+		UI.list(row, 6, true)
+		UI.button(row, "360° Vorschau", "secondary", { Size = UDim2.new(0.3, -4, 1, 0), TextSize = 12 }).MouseButton1Click:Connect(function()
+			startPreview(m, cat.Paints, function()
+				return selectedPaint
+			end, function(i)
+				selectedPaint = i
+				state.Paint = i
+			end)
+		end)
+		UI.button(row, "Probefahrt", "secondary", { Size = UDim2.new(0.25, -4, 1, 0), TextSize = 12 }).MouseButton1Click:Connect(function()
 			if ctxRef.Request("Dealer.TestDrive", { Model = m.Id }).ok then
 				V.Close()
 			end
 		end)
-		local armed = false
+		local buy = UI.button(row, "Kaufen  " .. money(m.Price), "primary", { Size = UDim2.new(0.45, -4, 1, 0), TextSize = 13 })
+		UI.label(col, string.format("Fahrzeuge %d/%d  ·  Kennzeichen wird bei Kauf vergeben", cat.Owned, cat.MaxOwned), 11, { LayoutOrder = nx(), TextColor3 = T.Muted })
 		buy.MouseButton1Click:Connect(function()
-			if not armed then
-				armed = true
-				buy.Text = "Kauf bestaetigen?"
-				task.delay(3, function()
-					if armed and buy.Parent then
-						armed = false
-						buy.Text = "Kaufen  " .. money(m.Price)
+			local p = cat.Paints[selectedPaint]
+			modal("Kauf bestaetigen", {
+				{ m.Name, 20, T.FontBlack },
+				{ m.Class .. "  ·  " .. (m.Drive or "-") .. "  ·  Lack: " .. p.Name, 13, nil, T.Muted },
+				{ "Kaufpreis: " .. money(m.Price), 16, T.FontBold, T.Success },
+				{ "Zahlung: " .. (method == "Cash" and "Bargeld" or "Bankkonto"), 13 },
+			}, {
+				{ "Jetzt kaufen", "primary", function()
+					local r = ctxRef.Request("Dealer.Buy", { Model = m.Id, Paint = selectedPaint, Method = method, TxId = ctxRef.TxId() }, true)
+					if r.ok then
+						modal("Kaufbestaetigung", {
+							{ "Herzlichen Glueckwunsch!", 18, T.FontBlack },
+							{ string.format("%s gehoert jetzt dir.", r.data.Name), 14 },
+							{ "Kennzeichen: " .. r.data.Plate, 16, T.FontBold, T.Accent },
+							{ string.format("Bezahlt: %s (%s)", money(r.data.Price), r.data.Method == "Cash" and "bar" or "Bankkonto"), 13, nil, T.Muted },
+							{ "Das Fahrzeug steht in deiner Garage (Handy-App Garage oder Garagen-Terminal).", 12, nil, T.Muted },
+						}, {
+							{ "Zur Garage", "primary", function()
+								state.Tab = "Garage"
+								V.Render()
+							end },
+							{ "Weiter umsehen", "secondary", function()
+								V.Render()
+							end },
+						})
+					else
+						ctxRef.UI.toast(r.msg or "Kauf fehlgeschlagen", "error")
 					end
-				end)
-				return
-			end
-			armed = false
-			local r = ctxRef.Request("Dealer.Buy", { Model = m.Id, Paint = selectedPaint, TxId = ctxRef.TxId() })
-			if r.ok then
-				state.Tab = "Garage"
-				V.Render()
-			end
+				end },
+				{ "Abbrechen", "secondary", nil },
+			})
 		end)
 	end
+	local first
 	for i, m in ipairs(cat.Models) do
 		local card = UI.new("TextButton", { LayoutOrder = i, AutoButtonColor = false, Text = "", Size = UDim2.new(1, -6, 0, 58), BackgroundColor3 = T.Panel2, Parent = list })
 		UI.corner(card, 10)
@@ -130,10 +347,13 @@ local function renderDealer(body)
 			s.Color = T.Accent
 			showModel(m)
 		end)
-		if i == 1 then
-			s.Color = T.Accent
-			showModel(m)
+		if (state.Model and m.Id == state.Model) or (not state.Model and i == 1) then
+			first = { m, s }
 		end
+	end
+	if first then
+		first[2].Color = T.Accent
+		showModel(first[1])
 	end
 end
 
