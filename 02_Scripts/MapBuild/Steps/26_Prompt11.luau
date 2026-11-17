@@ -239,7 +239,13 @@ return function(Kit)
 		for _, l in ipairs(m:GetDescendants()) do
 			if l:IsA("Light") and l.Parent and l.Parent:IsA("BasePart") and l.Parent.Transparency >= 1 then
 				l.Enabled = false
+			elseif l:IsA("SurfaceGui") or l:IsA("Decal") or l:IsA("Texture") then
+				l:Destroy() -- Rettungsdienst-Beschriftung der Vorlage entfernen
 			end
+		end
+		for _, s in ipairs({ -1, 1 }) do
+			local panel = add("Livery", Vector3.new(0.1, 1.6, 12), CFrame.new(s * 4.75, 4.2, 2), rgb(40, 140, 230))
+			signText(panel, s < 0 and Enum.NormalId.Left or Enum.NormalId.Right, "MIAMI STATE TRANSIT", rgb(255, 255, 255))
 		end
 		local s = add("RouteSign", Vector3.new(5, 0.9, 0.2), CFrame.new(0, 5.6, -11.2), rgb(10, 10, 12), M.SmoothPlastic)
 		signText(s, Enum.NormalId.Front, "1  STADTRUNDKURS", rgb(255, 200, 60))

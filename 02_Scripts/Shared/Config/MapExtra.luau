@@ -22,6 +22,13 @@ return {
 		{ "Restaurant", "Maison Azure (Fine Dining)", -205, -1370 },
 		{ "Restaurant", "Bayfront Kitchen", 168, -1370 },
 		{ "Restaurant", "SKYLINE 52 (Rooftop)", 594, 556 },
+		-- Prompt 11: Arbeitgeber / Depots (Positionen aus Bauschritt 26)
+		{ "Jobs", "Taxizentrale Miami Cab Co.", -993, 270 },
+		{ "Jobs", "Busdepot Miami State Transit", -993, -530 },
+		{ "Jobs", "Paketdepot Gulf Coast Parcel", -1598, 1076 },
+		{ "Jobs", "Pannendienst Miami Auto Repair", -3474, -823 },
+		{ "Jobs", "Meridian Freight (Hafen)", 326, 1323 },
+		{ "Jobs", "Baustelle Sunstate Construction", -3306, 1076 },
 	},
 	Remove = {
 		{ "Autohaus", -2693, 779 },
