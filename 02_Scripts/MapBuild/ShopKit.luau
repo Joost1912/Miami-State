@@ -37,6 +37,11 @@ local STYLE = {
 	LongGuns = { floor = rgb(120, 86, 58), fmat = M.WoodPlanks, wall = rgb(150, 112, 78), wmat = M.Wood, light = rgb(255, 226, 180) },
 	Jeweler = { floor = rgb(226, 220, 210), fmat = M.Marble, wall = rgb(92, 66, 50), wmat = M.Wood, light = rgb(255, 240, 214) },
 	Bank = { floor = rgb(214, 208, 196), fmat = M.Marble, wall = rgb(232, 226, 212), light = rgb(255, 246, 230) },
+	-- Essen & Trinken
+	Market = { floor = rgb(214, 212, 204), fmat = M.Marble, wall = rgb(236, 236, 230), light = rgb(250, 252, 255) },
+	Cafe = { floor = rgb(150, 108, 74), fmat = M.WoodPlanks, wall = rgb(238, 226, 206), light = rgb(255, 226, 180) },
+	Bakery = { floor = rgb(200, 170, 130), fmat = M.WoodPlanks, wall = rgb(246, 236, 218), light = rgb(255, 232, 196) },
+	Diner = { floor = rgb(232, 232, 228), fmat = M.Marble, wall = rgb(214, 70, 64), light = rgb(255, 240, 220) },
 }
 
 -- Sicherung des Originalblocks (Body/Door/Display) -> ShopKit.revert(model) stellt den Ursprung wieder her
@@ -226,7 +231,7 @@ function ShopKit.convert(model, spec)
 	P(I, "RegisterScreen", Vector3.new(0.1, 0.8, 1.1), cx - side * 0.3, FL + 5.1, cz - 1.8, rgb(60, 200, 230), M.Neon, { decor = true })
 	reg:SetAttribute("InteractType", "Shop")
 	reg:SetAttribute("ShopId", spec.ShopId)
-	reg:SetAttribute("InteractText", spec.Kind == "Jeweler" and "Ausstellung ansehen" or "Einkaufen")
+	reg:SetAttribute("InteractText", spec.InteractText or (spec.Kind == "Jeweler" and "Ausstellung ansehen" or "Einkaufen"))
 	reg:SetAttribute("ObjectText", spec.Title or spec.Name or "Laden")
 	reg:SetAttribute("Range", 9)
 	CollectionService:AddTag(reg, "Interactable")
@@ -318,6 +323,159 @@ F.Supermarket = function(c)
 	P(I, "PromoTable", Vector3.new(5, 2.6, 3), -c.side * 3, FL + 1.3, zf + 7, rgb(120, 80, 50), M.Wood)
 	P(I, "PromoFruit", Vector3.new(4.6, 0.6, 2.6), -c.side * 3, FL + 2.9, zf + 7, rgb(250, 150, 40), M.SmoothPlastic, { decor = true })
 	P(I, "BasketStack", Vector3.new(1.6, 1.6, 1.2), c.side * (c.W / 2 - 2), FL + 0.8, zf + 11.5, rgb(220, 40, 40), M.SmoothPlastic)
+end
+
+-- Kleiner Markt: wie Supermarkt (Regale, Kuehlregal, Obststand)
+F.Market = function(c)
+	F.Supermarket(c)
+end
+
+-- Bistrotisch mit zwei Stuehlen (Mitte x, z)
+local function bistro(c, x, z, top, wood)
+	local P, I, FL = c.P, c.I, c.FL
+	P(I, "TableTop", Vector3.new(2.8, 0.2, 2.8), x, FL + 2.6, z, top or rgb(236, 232, 224), M.Marble)
+	P(I, "TableLeg", Vector3.new(0.3, 2.4, 0.3), x, FL + 1.3, z, rgb(40, 40, 44), M.Metal)
+	P(I, "TableFoot", Vector3.new(1.4, 0.15, 1.4), x, FL + 0.08, z, rgb(40, 40, 44), M.Metal)
+	for s = -1, 1, 2 do
+		P(I, "ChairSeat", Vector3.new(1.6, 0.25, 1.6), x + s * 2.3, FL + 1.6, z, wood or rgb(120, 84, 56), M.Wood)
+		P(I, "ChairBack", Vector3.new(0.25, 1.9, 1.6), x + s * 3.05, FL + 2.6, z, wood or rgb(120, 84, 56), M.Wood)
+		P(I, "ChairLegs", Vector3.new(0.3, 1.5, 0.3), x + s * 2.3, FL + 0.75, z, rgb(40, 40, 44), M.Metal)
+	end
+end
+
+-- Tafel mit Text an der Rueckwand
+local function menuBoard(c, x, y, z, w, text, bg, fg)
+	local b = c.P(c.I, "MenuBoard", Vector3.new(w, 3, 0.2), x, y, z, bg or rgb(28, 30, 28), M.SmoothPlastic, { decor = true })
+	local sg = Instance.new("SurfaceGui")
+	sg.Face = Enum.NormalId.Front
+	sg.PixelsPerStud = 40
+	sg.LightInfluence = 0.2
+	sg.Parent = b
+	local t = Instance.new("TextLabel")
+	t.Size = UDim2.fromScale(1, 1)
+	t.BackgroundTransparency = 1
+	t.Font = Enum.Font.GothamBold
+	t.TextScaled = true
+	t.TextColor3 = fg or rgb(245, 236, 210)
+	t.Text = text
+	t.Parent = sg
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft, pad.PaddingRight = UDim.new(0.06, 0), UDim.new(0.06, 0)
+	pad.PaddingTop, pad.PaddingBottom = UDim.new(0.18, 0), UDim.new(0.18, 0)
+	pad.Parent = t
+	return b
+end
+
+-- Tische im Gastraum verteilen (frei: Kasse vorn an der Seite, Weg von der Tuer)
+local function seating(c, z0, z1, top, wood)
+	local W = c.W
+	local x = -W / 2 + 5
+	while x <= W / 2 - 5 do
+		local z = z0
+		while z <= z1 do
+			local nearCounter = math.abs(x - c.counter.X) < 6 and z < c.counter.Z + 6
+			local inDoorPath = math.abs(x - c.du) < 3 and z < c.zf + 10
+			if not nearCounter and not inDoorPath then
+				bistro(c, x, z, top, wood)
+			end
+			z += 6.5
+		end
+		x += 8.5
+	end
+end
+
+local function plant(c, x, z)
+	local P, I, FL = c.P, c.I, c.FL
+	P(I, "PlantPot", Vector3.new(1.6, 1.8, 1.6), x, FL + 0.9, z, rgb(190, 110, 70), M.SmoothPlastic)
+	P(I, "PlantLeaves", Vector3.new(2.6, 2.6, 2.6), x, FL + 3, z, rgb(70, 140, 70), M.Grass, { decor = true, shape = Enum.PartType.Ball })
+end
+
+F.Cafe = function(c)
+	local P, I, FL, W, zf, zb = c.P, c.I, c.FL, c.W, c.zf, c.zb
+	local rng = rnd(31)
+	-- Bar an der Rueckwand mit Siebtraeger-Maschine, Muehle, Kuchenvitrine
+	P(I, "BackBar", Vector3.new(W - 4, 3.6, 2.2), 0, FL + 1.8, zb - 2.1, rgb(110, 74, 48), M.Wood)
+	P(I, "BackBarTop", Vector3.new(W - 3.8, 0.2, 2.4), 0, FL + 3.7, zb - 2.1, rgb(232, 228, 220), M.Marble)
+	P(I, "EspressoMachine", Vector3.new(2.8, 1.8, 1.4), -W / 4, FL + 4.7, zb - 2.2, rgb(196, 198, 204), M.Metal)
+	P(I, "EspressoAccent", Vector3.new(2.9, 0.3, 1.5), -W / 4, FL + 5.5, zb - 2.2, rgb(180, 40, 40), M.SmoothPlastic, { decor = true })
+	P(I, "Grinder", Vector3.new(0.8, 1.6, 0.8), -W / 4 + 2.4, FL + 4.6, zb - 2.2, rgb(40, 40, 44), M.Metal, { decor = true })
+	P(I, "Vitrine", Vector3.new(4.2, 1.5, 1.7), W / 4, FL + 4.55, zb - 2.1, rgb(210, 235, 245), M.Glass, { t = 0.45 })
+	local cake = { rgb(240, 200, 150), rgb(120, 70, 40), rgb(240, 150, 170), rgb(250, 240, 220), rgb(200, 140, 70) }
+	for i = -2, 2 do
+		P(I, "Pastry", Vector3.new(0.6, 0.35, 0.6), W / 4 + i * 0.75, FL + 4.1, zb - 2.1, cake[rng:NextInteger(1, #cake)], M.SmoothPlastic, { decor = true })
+	end
+	-- Regal mit Tassen und Kaffeebohnen ueber der Bar
+	P(I, "CupShelf", Vector3.new(W - 6, 0.2, 1), 0, FL + 7.2, zb - 1.3, rgb(110, 74, 48), M.Wood)
+	for i = 1, math.floor((W - 8) / 1.4) do
+		P(I, "Cup", Vector3.new(0.5, 0.6, 0.5), -W / 2 + 4 + i * 1.4, FL + 7.6, zb - 1.3, (i % 3 == 0) and rgb(64, 160, 150) or rgb(245, 245, 240), M.SmoothPlastic, { decor = true })
+	end
+	menuBoard(c, 0, FL + 9.6, zb - 0.95, math.min(W - 8, 14), "ESPRESSO  \u{00B7}  CAPPUCCINO  \u{00B7}  ICED COFFEE\nCROISSANT  \u{00B7}  DONUT  \u{00B7}  SMOOTHIE")
+	-- Gastraum
+	seating(c, zf + 9, zb - 7.5)
+	plant(c, -W / 2 + 2.2, zb - 5.5)
+	plant(c, W / 2 - 2.2, zb - 5.5)
+	-- warme Haengelampen
+	for i = -1, 1 do
+		local lamp = P(I, "PendantLamp", Vector3.new(1.2, 0.8, 1.2), i * W / 4, c.IH - 2.2, (zf + zb) / 2, rgb(255, 214, 150), M.Neon, { decor = true, shape = Enum.PartType.Ball })
+		local pl = Instance.new("PointLight")
+		pl.Range, pl.Brightness, pl.Color, pl.Shadows = 14, 0.8, rgb(255, 214, 160), false
+		pl.Parent = lamp
+		P(I, "PendantCord", Vector3.new(0.1, 1.8, 0.1), i * W / 4, c.IH - 1.1, (zf + zb) / 2, rgb(30, 30, 30), M.SmoothPlastic, { decor = true })
+	end
+end
+
+F.Bakery = function(c)
+	local P, I, FL, W, zf, zb = c.P, c.I, c.FL, c.W, c.zf, c.zb
+	local rng = rnd(41)
+	-- Brotregal an der Rueckwand
+	P(I, "BreadShelf", Vector3.new(W - 4, 7, 1.6), 0, FL + 3.5, zb - 1.6, rgb(150, 104, 66), M.Wood)
+	local bread = { rgb(196, 140, 74), rgb(170, 110, 56), rgb(220, 176, 110), rgb(140, 86, 44) }
+	for lvl = 0, 3 do
+		local y = FL + 1.2 + lvl * 1.6
+		P(I, "BreadBoard", Vector3.new(W - 4.2, 0.15, 1.8), 0, y, zb - 2.2, rgb(170, 122, 80), M.Wood)
+		for i = 1, math.floor((W - 6) / 1.6) do
+			P(I, "Loaf", Vector3.new(1.2, 0.6, 0.8), -W / 2 + 3 + i * 1.6, y + 0.4, zb - 2.3, bread[rng:NextInteger(1, #bread)], M.SmoothPlastic, { decor = true })
+		end
+	end
+	-- Theke mit Glasvitrine
+	P(I, "PastryCounter", Vector3.new(W - 8, 3.4, 2), 0, FL + 1.7, zb - 6, rgb(240, 232, 216), M.SmoothPlastic)
+	P(I, "PastryGlass", Vector3.new(W - 8, 1.6, 2), 0, FL + 4.2, zb - 6, rgb(210, 235, 245), M.Glass, { t = 0.45 })
+	local cake = { rgb(240, 200, 150), rgb(240, 150, 170), rgb(250, 240, 220), rgb(200, 140, 70), rgb(120, 70, 40) }
+	for i = 1, math.floor((W - 10) / 1.1) do
+		P(I, "Pastry", Vector3.new(0.7, 0.4, 0.7), -W / 2 + 5 + i * 1.1, FL + 3.65, zb - 6, cake[rng:NextInteger(1, #cake)], M.SmoothPlastic, { decor = true })
+	end
+	menuBoard(c, 0, FL + 9.8, zb - 0.95, math.min(W - 8, 12), "FRISCHES BROT  \u{00B7}  CROISSANTS  \u{00B7}  DONUTS", rgb(60, 40, 28))
+	seating(c, zf + 9, zb - 10, rgb(250, 248, 240), rgb(170, 120, 80))
+	plant(c, -W / 2 + 2.2, zf + 9)
+end
+
+F.Diner = function(c)
+	local P, I, FL, W, zf, zb = c.P, c.I, c.FL, c.W, c.zf, c.zb
+	-- Bartresen mit Hockern an der Rueckwand
+	P(I, "DinerBar", Vector3.new(W - 6, 3.6, 2.2), 0, FL + 1.8, zb - 4, rgb(200, 205, 210), M.Metal)
+	P(I, "DinerBarTop", Vector3.new(W - 5.8, 0.25, 2.6), 0, FL + 3.7, zb - 4, rgb(214, 70, 64), M.SmoothPlastic)
+	for i = 1, math.floor((W - 8) / 3) do
+		local x = -W / 2 + 4 + i * 3
+		P(I, "StoolSeat", Vector3.new(1.4, 0.4, 1.4), x, FL + 2.6, zb - 6.2, rgb(214, 70, 64), M.Fabric, { shape = Enum.PartType.Cylinder })
+		P(I, "StoolPost", Vector3.new(0.3, 2.4, 0.3), x, FL + 1.2, zb - 6.2, rgb(200, 205, 210), M.Metal)
+	end
+	P(I, "Kitchen", Vector3.new(W - 4, 1, 1.4), 0, FL + 5, zb - 1.4, rgb(200, 205, 210), M.Metal)
+	menuBoard(c, 0, FL + 9.4, zb - 0.95, math.min(W - 8, 14), "PANCAKES  \u{00B7}  BURGER  \u{00B7}  FRIES  \u{00B7}  MILKSHAKES", rgb(30, 34, 40), rgb(255, 220, 120))
+	-- Sitznischen an der kassenabgewandten Seitenwand
+	local sx = -c.side * (W / 2 - 3.2)
+	local z = zf + 9
+	while z < zb - 10 do
+		P(I, "BoothTable", Vector3.new(3, 0.25, 2.6), sx, FL + 2.6, z, rgb(240, 240, 236), M.Marble)
+		P(I, "BoothTableLeg", Vector3.new(0.4, 2.4, 0.4), sx, FL + 1.3, z, rgb(200, 205, 210), M.Metal)
+		for s = -1, 1, 2 do
+			P(I, "BoothSeat", Vector3.new(3.4, 1.6, 1.4), sx, FL + 0.8, z + s * 2.2, rgb(214, 70, 64), M.Fabric)
+			P(I, "BoothBack", Vector3.new(3.4, 2.4, 0.5), sx, FL + 2.8, z + s * 2.75, rgb(214, 70, 64), M.Fabric)
+		end
+		z += 6.5
+	end
+	-- Tische in der Mitte
+	local c2 = setmetatable({ W = W * 0.5 }, { __index = c })
+	seating(c2, zf + 10, zb - 11, rgb(240, 240, 236), rgb(214, 70, 64))
 end
 
 F.Hardware = function(c)
