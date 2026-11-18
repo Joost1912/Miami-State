@@ -22,6 +22,7 @@ Shops.Catalogs = {
 		Items = {
 			{ Id = "WaterBottle", Price = 2 }, { Id = "Soda", Price = 2 }, { Id = "EnergyDrink", Price = 4 }, { Id = "Coffee", Price = 4 },
 			{ Id = "Sandwich", Price = 6 }, { Id = "Snack", Price = 3 }, { Id = "Chips", Price = 3 }, { Id = "Fruit", Price = 3 },
+			{ Id = "Croissant", Price = 3 }, { Id = "Donut", Price = 3 }, { Id = "IcedCoffee", Price = 4 }, { Id = "Pizza", Price = 9 },
 			{ Id = "Bandage", Price = 14 }, { Id = "Batteries", Price = 6 }, { Id = "Sunscreen", Price = 12 }, { Id = "Umbrella", Price = 18 },
 		},
 	},
@@ -204,7 +205,7 @@ Shops.Catalogs = {
 	},
 	Market = {
 		Title = "Corner Market", Subtitle = "Kleiner Supermarkt", Kind = "Retail", Icon = "🛒", Color = rgb(90, 180, 110),
-		Items = { { Id = "WaterBottle", Price = 2 }, { Id = "Soda", Price = 2 }, { Id = "Sandwich", Price = 6 }, { Id = "Chips", Price = 3 }, { Id = "Fruit", Price = 3 }, { Id = "Batteries", Price = 6 } },
+		Items = { { Id = "WaterBottle", Price = 2 }, { Id = "Soda", Price = 2 }, { Id = "Coffee", Price = 3 }, { Id = "EnergyDrink", Price = 4 }, { Id = "Sandwich", Price = 6 }, { Id = "Chips", Price = 3 }, { Id = "Snack", Price = 3 }, { Id = "Fruit", Price = 3 }, { Id = "Donut", Price = 3 }, { Id = "Batteries", Price = 6 } },
 	},
 }
 
